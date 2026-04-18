@@ -1,0 +1,19 @@
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub/
+build/
+coverage/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Generated example artifacts
+example/.dart_tool/
+example/.packages
+example/.flutter-plugins
+example/.flutter-plugins-dependencies
+example/build/
