@@ -9,13 +9,19 @@ import 'awesome_button_style.dart';
 import 'awesome_button_theme_data.dart';
 import 'text_transition.dart';
 
+/// Completion callback used by progress buttons.
 typedef AwesomeButtonNext = void Function([VoidCallback? callback]);
+
+/// Press handler used by [AwesomeButton] and [ThemedButton].
 typedef AwesomeButtonPressCallback = void Function([AwesomeButtonNext? next]);
 
 const double _defaultHorizontalPadding = 16;
 const double _defaultVerticalPadding = 0;
 
+/// A layered 3D button with optional progress, themed styling, and slot-based
+/// content.
 class AwesomeButton extends StatefulWidget {
+  /// Creates an [AwesomeButton].
   const AwesomeButton({
     super.key,
     this.child,
@@ -49,37 +55,96 @@ class AwesomeButton extends StatefulWidget {
     this.onProgressEnd,
   });
 
+  /// Main child content shown in the button face.
   final Object? child;
+
+  /// Press callback for normal and progress buttons.
   final AwesomeButtonPressCallback? onPress;
+
+  /// Long-press callback fired after the platform long-press gesture wins.
   final VoidCallback? onLongPress;
+
+  /// Whether the button should ignore interactions and render disabled styles.
   final bool disabled;
+
+  /// Fixed button width. Leave null to use the intrinsic width.
   final double? width;
+
+  /// Height of the moving face.
   final double height;
+
+  /// Horizontal content padding.
   final double? paddingHorizontal;
+
+  /// Top content padding.
   final double? paddingTop;
+
+  /// Bottom content padding.
   final double? paddingBottom;
+
+  /// Leading content that animates with the main child.
   final Widget? before;
+
+  /// Trailing content that animates with the main child.
   final Widget? after;
+
+  /// Background content rendered inside the face behind the main content.
   final Widget? extra;
+
+  /// Whether the button should fill the available horizontal space.
   final bool stretch;
+
+  /// Visual overrides merged on top of the active theme.
   final AwesomeButtonStyle? style;
+
+  /// Optional focus node used by keyboard and accessibility focus.
   final FocusNode? focusNode;
+
+  /// Whether the button should request focus when inserted.
   final bool autofocus;
+
+  /// Face opacity applied while a non-progress button is pressed.
   final double activeOpacity;
+
+  /// Leading-edge debounce window for accepted presses.
   final Duration debouncedPressTime;
+
+  /// Enables one-shot progress mode with the [AwesomeButtonNext] contract.
   final bool progress;
+
+  /// Whether the loading bar is rendered during progress mode.
   final bool showProgressBar;
+
+  /// Default duration for the animated progress fill.
   final Duration progressLoadingTime;
+
+  /// Enables string-only text transition effects between child updates.
   final bool textTransition;
+
+  /// Whether placeholder buttons should animate their shimmer.
   final bool animatedPlaceholder;
+
+  /// Callback fired when a pointer/touch down arms the pressed state.
   final VoidCallback? onPressIn;
+
+  /// Callback fired when a press is canceled or released.
   final VoidCallback? onPressOut;
+
+  /// Callback fired when the visual pressed state begins.
   final VoidCallback? onPressedIn;
+
+  /// Callback fired after the release animation settles.
   final VoidCallback? onPressedOut;
+
+  /// Callback fired when progress mode begins.
   final VoidCallback? onProgressStart;
+
+  /// Callback fired after progress mode fully completes.
   final VoidCallback? onProgressEnd;
 
   @override
+
+  /// Creates the mutable state for this button.
   State<AwesomeButton> createState() => _AwesomeButtonState();
 }
 

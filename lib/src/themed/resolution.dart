@@ -5,6 +5,8 @@ import '../awesome_button_theme_data.dart';
 import 'colors.dart' as themed_colors;
 import 'models.dart';
 
+/// Transparent overrides applied when a themed button opts into transparent
+/// rendering.
 const ThemeButtonStyle transparentStyles = ThemeButtonStyle(
   backgroundColor: Colors.transparent,
   backgroundDarker: Colors.transparent,
@@ -13,6 +15,7 @@ const ThemeButtonStyle transparentStyles = ThemeButtonStyle(
   borderColor: Colors.transparent,
 );
 
+/// Resolves the effective themed variant, honoring disabled and flat overrides.
 ButtonVariant resolveButtonType(
   ThemeDefinition theme,
   bool disabled,
@@ -30,6 +33,7 @@ ButtonVariant resolveButtonType(
       : ButtonVariant.primary;
 }
 
+/// Returns a stable descriptor for the current theme source.
 String getThemeSourceDescriptor({
   required int? index,
   required ThemeName? name,
@@ -46,6 +50,7 @@ String getThemeSourceDescriptor({
   return 'index:${index ?? 'null'}';
 }
 
+/// Returns a palette suitable for color interpolation in themed transitions.
 ThemeButtonStyle getInterpolatablePalette(ThemeButtonStyle buttonStyle) {
   final fallback = AwesomeButtonThemeData.fallbackStyle;
   final backgroundColor =
@@ -61,6 +66,7 @@ ThemeButtonStyle getInterpolatablePalette(ThemeButtonStyle buttonStyle) {
   );
 }
 
+/// Returns true when two themed palettes are equal.
 bool areThemeButtonStylesEqual(ThemeButtonStyle left, ThemeButtonStyle right) {
   return themed_colors.areThemeButtonStylesEqual(left, right);
 }
@@ -84,8 +90,10 @@ final ThemeButtonStyle _fallbackThemePalette = () {
   );
 }();
 
+/// Converts a [ThemeButtonStyle] into the base [AwesomeButtonStyle] format.
 AwesomeButtonStyle themeButtonStyleToAwesomeButtonStyle(
-    ThemeButtonStyle style) {
+  ThemeButtonStyle style,
+) {
   return AwesomeButtonStyle(
     activityColor: style.activityColor,
     backgroundActive: style.backgroundActive,

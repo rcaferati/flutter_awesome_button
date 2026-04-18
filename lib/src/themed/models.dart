@@ -1,44 +1,100 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
+/// Built-in theme names supported by [ThemedButton] and [getTheme].
 enum ThemeName {
+  /// The default blue theme.
   basic,
+
+  /// The Bojack-inspired theme.
   bojack,
+
+  /// The Cartman-inspired theme.
   cartman,
+
+  /// The Mysterion-inspired theme.
   mysterion,
+
+  /// The C-137-inspired theme.
   c137,
+
+  /// The Rick-inspired theme.
   rick,
+
+  /// The Summer-inspired theme.
   summer,
+
+  /// The Bruce-inspired theme.
   bruce,
 }
 
+/// Built-in button variants supported by themed buttons.
 enum ButtonVariant {
+  /// Primary action variant.
   primary,
+
+  /// Secondary action variant.
   secondary,
+
+  /// Anchor/link-style variant.
   anchor,
+
+  /// Danger/destructive variant.
   danger,
+
+  /// Disabled visual variant.
   disabled,
+
+  /// Flat visual variant.
   flat,
+
+  /// Twitter social variant.
   twitter,
+
+  /// Messenger social variant.
   messenger,
+
+  /// Facebook social variant.
   facebook,
+
+  /// GitHub social variant.
   github,
+
+  /// LinkedIn social variant.
   linkedin,
+
+  /// WhatsApp social variant.
   whatsapp,
+
+  /// Reddit social variant.
   reddit,
+
+  /// Pinterest social variant.
   pinterest,
+
+  /// YouTube social variant.
   youtube,
 }
 
+/// Built-in size presets used by [ThemedButton].
 enum ButtonSize {
+  /// Square icon-only size preset.
   icon,
+
+  /// Compact preset.
   small,
+
+  /// Default preset.
   medium,
+
+  /// Large preset.
   large,
 }
 
+/// Theme-local style values that map into [AwesomeButtonStyle].
 @immutable
 class ThemeButtonStyle {
+  /// Creates a themed button style definition.
   const ThemeButtonStyle({
     this.activityColor,
     this.backgroundActive,
@@ -66,31 +122,79 @@ class ThemeButtonStyle {
     this.width,
   });
 
+  /// Spinner color.
   final Color? activityColor;
+
+  /// Face color used while pressed.
   final Color? backgroundActive;
+
+  /// Face background color.
   final Color? backgroundColor;
+
+  /// Lower shell color.
   final Color? backgroundDarker;
+
+  /// Placeholder block color.
   final Color? backgroundPlaceholder;
+
+  /// Progress bar fill color.
   final Color? backgroundProgress;
+
+  /// Flat shadow-plane color.
   final Color? backgroundShadow;
+
+  /// Border color.
   final Color? borderColor;
+
+  /// Uniform border radius.
   final double? borderRadius;
+
+  /// Bottom-left corner radius override.
   final double? borderBottomLeftRadius;
+
+  /// Bottom-right corner radius override.
   final double? borderBottomRightRadius;
+
+  /// Top-left corner radius override.
   final double? borderTopLeftRadius;
+
+  /// Top-right corner radius override.
   final double? borderTopRightRadius;
+
+  /// Border width.
   final double? borderWidth;
+
+  /// Face height.
   final double? height;
+
+  /// Bottom content padding.
   final double? paddingBottom;
+
+  /// Horizontal content padding.
   final double? paddingHorizontal;
+
+  /// Top content padding.
   final double? paddingTop;
+
+  /// Raise amount between face and lower shell.
   final double? raiseLevel;
+
+  /// Foreground text color.
   final Color? textColor;
+
+  /// Font family for string content.
   final String? textFontFamily;
+
+  /// Line height for string content.
   final double? textLineHeight;
+
+  /// Text size for string content.
   final double? textSize;
+
+  /// Width override for themed size resolution.
   final double? width;
 
+  /// Returns a copy of this theme style with the provided values replaced.
   ThemeButtonStyle copyWith({
     Color? activityColor,
     Color? backgroundActive,
@@ -148,6 +252,7 @@ class ThemeButtonStyle {
     );
   }
 
+  /// Merges another themed style on top of this style.
   ThemeButtonStyle merge(ThemeButtonStyle? other) {
     if (other == null) {
       return this;
@@ -243,8 +348,10 @@ class ThemeButtonStyle {
       ]);
 }
 
+/// Size preset values used by [ThemeDefinition.size].
 @immutable
 class ThemeSizeStyle {
+  /// Creates a themed size preset.
   const ThemeSizeStyle({
     required this.width,
     required this.height,
@@ -252,9 +359,16 @@ class ThemeSizeStyle {
     this.paddingHorizontal,
   });
 
+  /// Resolved width for the preset.
   final double width;
+
+  /// Resolved height for the preset.
   final double height;
+
+  /// Optional text size override.
   final double? textSize;
+
+  /// Optional horizontal padding override.
   final double? paddingHorizontal;
 
   @override
@@ -274,8 +388,10 @@ class ThemeSizeStyle {
   int get hashCode => Object.hash(width, height, textSize, paddingHorizontal);
 }
 
+/// Full built-in theme definition consumed by [ThemedButton].
 @immutable
 class ThemeDefinition {
+  /// Creates a theme definition.
   const ThemeDefinition({
     required this.title,
     required this.background,
@@ -284,10 +400,19 @@ class ThemeDefinition {
     required this.size,
   });
 
+  /// Display title used by the demo app and theme metadata.
   final String title;
+
+  /// Theme background color.
   final Color background;
+
+  /// Foreground color paired with [background].
   final Color color;
+
+  /// Variant style map for the theme.
   final Map<ButtonVariant, ThemeButtonStyle> buttons;
+
+  /// Size preset map for the theme.
   final Map<ButtonSize, ThemeSizeStyle> size;
 
   @override
@@ -316,8 +441,10 @@ class ThemeDefinition {
       );
 }
 
+/// Registered theme definition enriched with navigation metadata.
 @immutable
 class RegisteredThemeDefinition extends ThemeDefinition {
+  /// Creates a registered theme definition.
   const RegisteredThemeDefinition({
     required super.title,
     required super.background,
@@ -329,7 +456,12 @@ class RegisteredThemeDefinition extends ThemeDefinition {
     required this.prev,
   });
 
+  /// Stable built-in theme name.
   final ThemeName name;
+
+  /// Whether the next built-in theme exists.
   final bool next;
+
+  /// Whether the previous built-in theme exists.
   final bool prev;
 }

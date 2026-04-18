@@ -10,7 +10,10 @@ import 'themes.dart';
 
 const double _defaultThemedHorizontalPadding = 16;
 
+/// A typed wrapper around [AwesomeButton] that resolves built-in themes,
+/// variants, and sizes.
 class ThemedButton extends StatefulWidget {
+  /// Creates a [ThemedButton].
   const ThemedButton({
     super.key,
     this.child,
@@ -52,45 +55,120 @@ class ThemedButton extends StatefulWidget {
     this.onProgressEnd,
   });
 
+  /// Main child content shown in the button face.
   final Object? child;
+
+  /// Explicit theme configuration override.
   final ThemeDefinition? config;
+
+  /// Built-in theme index lookup.
   final int? index;
+
+  /// Built-in theme name lookup.
   final ThemeName? name;
+
+  /// Visual variant to resolve from the active theme.
   final ButtonVariant type;
+
+  /// Size preset to resolve from the active theme.
   final ButtonSize size;
+
+  /// Whether the themed flat variant should override [type].
   final bool flat;
+
+  /// Whether shell, shadow, and border colors should resolve transparent.
   final bool transparent;
+
+  /// Enables string-only text transition effects between child updates.
   final bool textTransition;
+
+  /// Whether placeholder buttons should animate their shimmer.
   final bool animatedPlaceholder;
+
+  /// Press callback for normal and progress buttons.
   final AwesomeButtonPressCallback? onPress;
+
+  /// Long-press callback fired after the platform long-press gesture wins.
   final VoidCallback? onLongPress;
+
+  /// Whether the button should ignore interactions and render disabled styles.
   final bool disabled;
+
+  /// Fixed button width override.
   final double? width;
+
+  /// Whether width should be measured from the string child instead of presets.
   final bool autoWidth;
+
+  /// Fixed face height override.
   final double? height;
+
+  /// Horizontal content padding override.
   final double? paddingHorizontal;
+
+  /// Top content padding override.
   final double? paddingTop;
+
+  /// Bottom content padding override.
   final double? paddingBottom;
+
+  /// Leading content that animates with the main child.
   final Widget? before;
+
+  /// Trailing content that animates with the main child.
   final Widget? after;
+
+  /// Background content rendered inside the face behind the main content.
   final Widget? extra;
+
+  /// Whether the button should fill the available horizontal space.
   final bool stretch;
+
+  /// Additional visual overrides merged on top of the themed resolution.
   final AwesomeButtonStyle? style;
+
+  /// Optional focus node used by keyboard and accessibility focus.
   final FocusNode? focusNode;
+
+  /// Whether the button should request focus when inserted.
   final bool autofocus;
+
+  /// Face opacity applied while a non-progress button is pressed.
   final double activeOpacity;
+
+  /// Leading-edge debounce window for accepted presses.
   final Duration debouncedPressTime;
+
+  /// Enables one-shot progress mode with the [AwesomeButtonNext] contract.
   final bool progress;
+
+  /// Whether the loading bar is rendered during progress mode.
   final bool showProgressBar;
+
+  /// Default duration for the animated progress fill.
   final Duration progressLoadingTime;
+
+  /// Callback fired when a pointer/touch down arms the pressed state.
   final VoidCallback? onPressIn;
+
+  /// Callback fired when a press is canceled or released.
   final VoidCallback? onPressOut;
+
+  /// Callback fired when the visual pressed state begins.
   final VoidCallback? onPressedIn;
+
+  /// Callback fired after the release animation settles.
   final VoidCallback? onPressedOut;
+
+  /// Callback fired when progress mode begins.
   final VoidCallback? onProgressStart;
+
+  /// Callback fired after progress mode fully completes.
   final VoidCallback? onProgressEnd;
 
   @override
+
+  /// Creates the mutable state for this themed button.
   State<ThemedButton> createState() => _ThemedButtonState();
 }
 
