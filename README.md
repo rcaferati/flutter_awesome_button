@@ -1,6 +1,6 @@
 # Flutter Awesome Button
 
-`flutter_awesome_button` is an RN-style 3D button package for Flutter.
+`flutter_awesome_button` is the current Flutter package for this repo.
 
 The library exports:
 
@@ -11,9 +11,28 @@ The library exports:
   `ThemeName`, `ButtonVariant`, `ButtonSize`, `ThemeButtonStyle`,
   `ThemeSizeStyle`, `ThemeDefinition`, and `RegisteredThemeDefinition`
 
-![Blue demo](https://raw.githubusercontent.com/rcaferati/flutter_awesome_button/main/screenshots/demo-button-blue-new.gif)
-![Cartman demo](https://raw.githubusercontent.com/rcaferati/flutter_awesome_button/main/screenshots/demo-button-cartman.gif)
-![Rick demo](https://raw.githubusercontent.com/rcaferati/flutter_awesome_button/main/screenshots/demo-button-rick.gif)
+<table>
+  <tr>
+    <td width="33%">
+      <img
+        alt="Blue demo"
+        src="https://raw.githubusercontent.com/rcaferati/flutter_awesome_button/main/screenshots/demo-button-blue-new.gif"
+      />
+    </td>
+    <td width="33%">
+      <img
+        alt="Cartman demo"
+        src="https://raw.githubusercontent.com/rcaferati/flutter_awesome_button/main/screenshots/demo-button-cartman.gif"
+      />
+    </td>
+    <td width="33%">
+      <img
+        alt="Rick demo"
+        src="https://raw.githubusercontent.com/rcaferati/flutter_awesome_button/main/screenshots/demo-button-rick.gif"
+      />
+    </td>
+  </tr>
+</table>
 
 ## Install
 
