@@ -20,7 +20,9 @@ double _performHeavyLoad(int durationMs) {
   return accumulator;
 }
 
+/// Example app used to demonstrate the package gallery and behaviors.
 class AwesomeButtonExampleApp extends StatelessWidget {
+  /// Creates the example application widget.
   const AwesomeButtonExampleApp({super.key});
 
   @override

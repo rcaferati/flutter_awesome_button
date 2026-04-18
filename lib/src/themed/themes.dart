@@ -803,6 +803,7 @@ RegisteredThemeDefinition _registeredThemeAtIndex(int safeIndex) {
   );
 }
 
+/// Resolves one of the built-in themes by index or name.
 RegisteredThemeDefinition getTheme({
   int? index = 0,
   ThemeName? name,

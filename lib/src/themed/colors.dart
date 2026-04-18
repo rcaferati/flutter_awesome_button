@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import 'models.dart';
 
+/// Blends [startColor] toward [endColor] or black/white by [percentage].
 Color blendColors(
   double percentage,
   Color startColor, [
@@ -49,6 +50,7 @@ Color blendColors(
   );
 }
 
+/// Interpolates palette fields between two [ThemeButtonStyle] values.
 ThemeButtonStyle interpolateThemeButtonStyle(
   ThemeButtonStyle from,
   ThemeButtonStyle to,
@@ -108,10 +110,12 @@ ThemeButtonStyle interpolateThemeButtonStyle(
   );
 }
 
+/// Returns true when two themed styles are equal.
 bool areThemeButtonStylesEqual(ThemeButtonStyle left, ThemeButtonStyle right) {
   return left == right;
 }
 
+/// Fills missing palette fields with [defaults] for animation-safe interpolation.
 ThemeButtonStyle getInterpolatablePalette(
   ThemeButtonStyle buttonStyle, {
   required ThemeButtonStyle defaults,

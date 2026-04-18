@@ -2,10 +2,19 @@ import 'dart:math' as math;
 
 import 'package:flutter/scheduler.dart';
 
+/// Delay between source-character randomization starts.
 const int textTransitionRandomizeStartStaggerMs = 5;
+
+/// Delay between new target-character expansion starts.
 const int textTransitionExpandStaggerMs = 5;
+
+/// Hold time after full randomization before collapse begins.
 const int textTransitionPostRandomizeHoldMs = 10;
+
+/// Delay between left-to-right collapse steps.
 const int textTransitionCollapseStaggerMs = 10;
+
+/// Approximate refresh interval used for frame-driven updates.
 const int textTransitionRefreshMs = 16;
 
 const String _lowercaseLetters = 'abcdefghijklmnopqrstuvwxyz';
@@ -13,7 +22,10 @@ const String _uppercaseLetters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 const String _digits = '0123456789';
 const String _symbols = '#%&^+=-';
 
+/// Callback that receives the currently rendered transition string.
 typedef TextTransitionUpdate = void Function(String value);
+
+/// Random source used to generate scrambled transition characters.
 typedef TextTransitionRandom = double Function();
 
 final math.Random _defaultTextTransitionRandomizer = math.Random();
@@ -21,7 +33,9 @@ final math.Random _defaultTextTransitionRandomizer = math.Random();
 double _defaultTextTransitionRandom() =>
     _defaultTextTransitionRandomizer.nextDouble();
 
+/// Timing breakdown for a text transition from one string to another.
 class TextTransitionTimeline {
+  /// Creates a transition timeline.
   const TextTransitionTimeline({
     required this.sourceLength,
     required this.targetLength,
@@ -32,19 +46,35 @@ class TextTransitionTimeline {
     required this.totalDurationMs,
   });
 
+  /// Length of the source string.
   final int sourceLength;
+
+  /// Length of the target string.
   final int targetLength;
+
+  /// Longest string length used during the transition.
   final int maxLength;
+
+  /// Last stagger time for source-character randomization.
   final int lastSourceRandomizeStartMs;
+
+  /// Last stagger time for any randomization step.
   final int lastRandomizeStartMs;
+
+  /// Time at which collapse into the target text begins.
   final int collapseStartMs;
+
+  /// Total transition duration.
   final int totalDurationMs;
 }
 
+/// Handle returned by [runTextTransition].
 abstract class TextTransitionController {
+  /// Stops the current transition and cancels future frame updates.
   void stop();
 }
 
+/// Returns the time at which a given slot starts scrambling.
 int? getTextTransitionRandomizeStartMs(
   int index,
   int sourceLength,
@@ -66,6 +96,7 @@ int? getTextTransitionRandomizeStartMs(
   return null;
 }
 
+/// Builds the timeline used to animate from [fromText] to [targetText].
 TextTransitionTimeline getTextTransitionTimeline(
   String fromText,
   String targetText,
@@ -101,6 +132,7 @@ TextTransitionTimeline getTextTransitionTimeline(
   );
 }
 
+/// Returns the randomization character set appropriate for [character].
 String? getTextTransitionCharset(String character) {
   if (RegExp(r'\s').hasMatch(character)) {
     return null;
@@ -123,6 +155,7 @@ String? getTextTransitionCharset(String character) {
   return _symbols;
 }
 
+/// Returns a scrambled replacement character compatible with [character].
 String getRandomTransitionCharacter(
   String character, [
   TextTransitionRandom random = _defaultTextTransitionRandom,
@@ -141,6 +174,7 @@ String getRandomTransitionCharacter(
   return charset[index];
 }
 
+/// Builds the visible transition frame for a given elapsed time.
 String buildTextTransitionFrame(
   String fromText,
   String targetText,
@@ -186,6 +220,7 @@ String buildTextTransitionFrame(
   }).join();
 }
 
+/// Runs the frame-driven text transition and returns a controller handle.
 TextTransitionController runTextTransition({
   required String fromText,
   required String targetText,

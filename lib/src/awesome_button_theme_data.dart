@@ -2,14 +2,19 @@ import 'package:flutter/material.dart';
 
 import 'awesome_button_style.dart';
 
+/// Theme extension that provides the default visual treatment for
+/// [AwesomeButton] instances.
 @immutable
 class AwesomeButtonThemeData extends ThemeExtension<AwesomeButtonThemeData> {
+  /// Creates theme data for [AwesomeButton] widgets.
   const AwesomeButtonThemeData({
     required this.style,
   });
 
+  /// Base style values used by the theme.
   final AwesomeButtonStyle style;
 
+  /// Fallback style used when no [Theme.of] extension is provided.
   static const AwesomeButtonStyle fallbackStyle = AwesomeButtonStyle(
     backgroundColor: Color(0xFF2563EB),
     depthColor: Color(0xFF1D4ED8),
@@ -35,15 +40,19 @@ class AwesomeButtonThemeData extends ThemeExtension<AwesomeButtonThemeData> {
     disabledBorderColor: Colors.transparent,
   );
 
+  /// Fallback theme extension used when the ambient theme does not define one.
   static const AwesomeButtonThemeData fallback = AwesomeButtonThemeData(
     style: fallbackStyle,
   );
 
+  /// Resolves the current [AwesomeButtonThemeData] from the nearest [Theme].
   static AwesomeButtonThemeData resolve(BuildContext context) {
     return Theme.of(context).extension<AwesomeButtonThemeData>() ?? fallback;
   }
 
   @override
+
+  /// Returns a copy of this theme with the provided style merged in.
   AwesomeButtonThemeData copyWith({
     AwesomeButtonStyle? style,
   }) {
@@ -53,6 +62,8 @@ class AwesomeButtonThemeData extends ThemeExtension<AwesomeButtonThemeData> {
   }
 
   @override
+
+  /// Linearly interpolates between two theme extensions.
   AwesomeButtonThemeData lerp(
     ThemeExtension<AwesomeButtonThemeData>? other,
     double t,

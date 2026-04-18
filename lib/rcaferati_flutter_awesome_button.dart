@@ -1,3 +1,7 @@
+/// Layered 3D animated buttons for Flutter with progress flows and themed
+/// variants.
+library;
+
 export 'src/awesome_button.dart';
 export 'src/awesome_button_style.dart';
 export 'src/awesome_button_theme_data.dart';

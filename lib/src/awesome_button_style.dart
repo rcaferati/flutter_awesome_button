@@ -2,8 +2,10 @@ import 'dart:ui' show lerpDouble;
 
 import 'package:flutter/material.dart';
 
+/// Visual configuration for [AwesomeButton].
 @immutable
 class AwesomeButtonStyle {
+  /// Creates a style override for [AwesomeButton].
   const AwesomeButtonStyle({
     this.backgroundColor,
     this.backgroundActive,
@@ -31,31 +33,79 @@ class AwesomeButtonStyle {
     this.disabledBorderColor,
   });
 
+  /// Face background color.
   final Color? backgroundColor;
+
+  /// Face background color shown while the button is actively pressed.
   final Color? backgroundActive;
+
+  /// Placeholder block color used when the button has no child.
   final Color? backgroundPlaceholder;
+
+  /// Progress bar fill color shown during loading.
   final Color? backgroundProgress;
+
+  /// Fixed bottom shell color.
   final Color? depthColor;
+
+  /// Flat translucent shadow-plane color.
   final Color? shadowColor;
+
+  /// Activity indicator color.
   final Color? activityColor;
+
+  /// Overlay color blended into the face when no explicit active color exists.
   final Color? pressedOverlayColor;
+
+  /// Main foreground color for text and icon content.
   final Color? foregroundColor;
+
+  /// Text size for string children.
   final double? textSize;
+
+  /// Text line height for string children.
   final double? textLineHeight;
+
+  /// Font family used for string children.
   final String? textFontFamily;
+
+  /// Border radius for the moving face and lower layers.
   final BorderRadiusGeometry? borderRadius;
+
+  /// Border width applied to the face.
   final double? borderWidth;
+
+  /// Border color applied to the face.
   final Color? borderColor;
+
+  /// Distance between the face and the bottom shell at rest.
   final double? raiseAmount;
+
+  /// Gap between `before`, `child`, and `after` content.
   final double? contentGap;
+
+  /// Press-in animation duration.
   final Duration? animationDuration;
+
+  /// Press-in animation curve.
   final Curve? animationCurve;
+
+  /// Face background color used when the button is disabled.
   final Color? disabledBackgroundColor;
+
+  /// Bottom shell color used when the button is disabled.
   final Color? disabledDepthColor;
+
+  /// Shadow-plane color used when the button is disabled.
   final Color? disabledShadowColor;
+
+  /// Foreground color used when the button is disabled.
   final Color? disabledForegroundColor;
+
+  /// Border color used when the button is disabled.
   final Color? disabledBorderColor;
 
+  /// Returns a copy of this style with the provided values replaced.
   AwesomeButtonStyle copyWith({
     Color? backgroundColor,
     Color? backgroundActive,
@@ -113,6 +163,7 @@ class AwesomeButtonStyle {
     );
   }
 
+  /// Merges another style on top of this style.
   AwesomeButtonStyle merge(AwesomeButtonStyle? other) {
     if (other == null) {
       return this;
@@ -145,6 +196,7 @@ class AwesomeButtonStyle {
     );
   }
 
+  /// Interpolates between two button styles.
   static AwesomeButtonStyle lerp(
     AwesomeButtonStyle a,
     AwesomeButtonStyle b,

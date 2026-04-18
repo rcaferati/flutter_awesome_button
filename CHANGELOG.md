@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.9.1
+
+- Added API documentation across the public widget, theme, style, and helper
+  surface to improve pub.dev package discoverability and developer guidance.
+- Enabled `public_member_api_docs` and cleaned up the exported API docs so the
+  package keeps passing the pub.dev documentation threshold.
+- Refreshed the release metadata so the standalone GitHub repository is the
+  canonical package source for pub.dev verification.
+
 ## 0.9.0
 
 - Completed the base `AwesomeButton` parity pass for Flutter with the layered
