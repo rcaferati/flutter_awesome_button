@@ -1,4 +1,4 @@
-import 'package:flutter_awesome_button/src/text_transition.dart';
+import 'package:rcaferati_flutter_awesome_button/src/text_transition.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

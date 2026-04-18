@@ -1,5 +1,5 @@
-name: flutter_awesome_button_example
-description: Example app for flutter_awesome_button.
+name: rcaferati_flutter_awesome_button_example
+description: Example app for rcaferati_flutter_awesome_button.
 publish_to: "none"
 
 environment:
@@ -9,7 +9,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  flutter_awesome_button:
+  rcaferati_flutter_awesome_button:
     path: ../
   flutter_vector_icons: ^2.0.0
 

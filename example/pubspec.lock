@@ -54,13 +54,6 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
-  flutter_awesome_button:
-    dependency: "direct main"
-    description:
-      path: ".."
-      relative: true
-    source: path
-    version: "0.9.0"
   flutter_lints:
     dependency: "direct dev"
     description:
@@ -146,6 +139,13 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.9.1"
+  rcaferati_flutter_awesome_button:
+    dependency: "direct main"
+    description:
+      path: ".."
+      relative: true
+    source: path
+    version: "0.9.0"
   sky_engine:
     dependency: transitive
     description: flutter

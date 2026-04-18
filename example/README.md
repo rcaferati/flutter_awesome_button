@@ -1,4 +1,4 @@
-# flutter_awesome_button example
+# rcaferati_flutter_awesome_button example
 
 This example app mirrors the React Native demo structure with three main flows:
 
