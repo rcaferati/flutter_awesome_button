@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter_awesome_button_example/main.dart';
+import 'package:rcaferati_flutter_awesome_button_example/main.dart';
 
 void main() {
   Future<void> pumpDemoSettle(WidgetTester tester) async {

@@ -14,7 +14,7 @@
 
 ## 0.1.0
 
-- Initial architecture for `flutter_awesome_button`.
+- Initial architecture for `rcaferati_flutter_awesome_button`.
 - Added `AwesomeButton`, `AwesomeButtonStyle`, and `AwesomeButtonThemeData`.
 - Added a gallery-style example app scaffold.
 - Added initial widget tests covering press, disabled, layout, style, and semantics.

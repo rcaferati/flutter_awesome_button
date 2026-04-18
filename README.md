@@ -1,6 +1,6 @@
 # Flutter Awesome Button
 
-`flutter_awesome_button` is the current Flutter package for this repo.
+`rcaferati_flutter_awesome_button` is the current Flutter package for this repo.
 
 The library exports:
 
@@ -38,7 +38,7 @@ The library exports:
 
 ```yaml
 dependencies:
-  flutter_awesome_button: ^0.9.0
+  rcaferati_flutter_awesome_button: ^0.9.0
 ```
 
 Then install dependencies:
@@ -56,7 +56,7 @@ Current Flutter support:
 
 ```dart
 import 'package:flutter/material.dart';
-import 'package:flutter_awesome_button/flutter_awesome_button.dart';
+import 'package:rcaferati_flutter_awesome_button/rcaferati_flutter_awesome_button.dart';
 
 class SaveButton extends StatelessWidget {
   const SaveButton({super.key});
@@ -82,7 +82,7 @@ your work is done to complete the progress animation and release the button.
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:flutter_awesome_button/flutter_awesome_button.dart';
+import 'package:rcaferati_flutter_awesome_button/rcaferati_flutter_awesome_button.dart';
 
 class SubmitButton extends StatelessWidget {
   const SubmitButton({super.key});
@@ -115,7 +115,7 @@ typedef AwesomeButtonPressCallback = void Function([AwesomeButtonNext? next]);
 
 ```dart
 import 'package:flutter/material.dart';
-import 'package:flutter_awesome_button/flutter_awesome_button.dart';
+import 'package:rcaferati_flutter_awesome_button/rcaferati_flutter_awesome_button.dart';
 
 class ThemeExample extends StatelessWidget {
   const ThemeExample({super.key});
@@ -146,7 +146,7 @@ If you need the full registered theme object, use `getTheme`.
 
 ```dart
 import 'package:flutter/material.dart';
-import 'package:flutter_awesome_button/flutter_awesome_button.dart';
+import 'package:rcaferati_flutter_awesome_button/rcaferati_flutter_awesome_button.dart';
 
 class ThemeConfigExample extends StatelessWidget {
   const ThemeConfigExample({super.key});
@@ -174,7 +174,7 @@ and `extra` for content rendered behind the button body.
 
 ```dart
 import 'package:flutter/material.dart';
-import 'package:flutter_awesome_button/flutter_awesome_button.dart';
+import 'package:rcaferati_flutter_awesome_button/rcaferati_flutter_awesome_button.dart';
 
 class ButtonContentExample extends StatelessWidget {
   const ButtonContentExample({super.key});
@@ -213,7 +213,7 @@ layers while preserving the content, hit target, and active/progress feedback.
 
 ```dart
 import 'package:flutter/material.dart';
-import 'package:flutter_awesome_button/flutter_awesome_button.dart';
+import 'package:rcaferati_flutter_awesome_button/rcaferati_flutter_awesome_button.dart';
 
 class TransparentExample extends StatelessWidget {
   const TransparentExample({super.key});

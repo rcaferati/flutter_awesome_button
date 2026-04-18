@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/physics.dart';
-import 'package:flutter_awesome_button/flutter_awesome_button.dart';
+import 'package:rcaferati_flutter_awesome_button/rcaferati_flutter_awesome_button.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 
 double _performHeavyLoad(int durationMs) {
@@ -26,7 +26,7 @@ class AwesomeButtonExampleApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'flutter_awesome_button',
+      title: 'rcaferati_flutter_awesome_button',
       theme: ThemeData(
         useMaterial3: true,
         scaffoldBackgroundColor: Colors.white,

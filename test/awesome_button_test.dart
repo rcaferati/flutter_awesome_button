@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:flutter_awesome_button/flutter_awesome_button.dart';
+import 'package:rcaferati_flutter_awesome_button/rcaferati_flutter_awesome_button.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
