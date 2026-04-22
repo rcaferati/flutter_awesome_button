@@ -73,6 +73,62 @@ class SaveButton extends StatelessWidget {
 `AwesomeButton` supports both plain string labels and arbitrary Flutter
 widgets.
 
+## Size Changes
+
+`animateSize` is enabled by default.
+
+- fixed `width` / `height` changes animate with `125ms cubic-bezier(0.3, 0.05, 0.2, 1)`
+- `ThemedButton` size preset changes animate because they resolve to fixed
+  width and height updates
+- auto-width string labels grow and shrink when their measured target width
+  changes
+- with `textTransition` plus auto width, wider labels animate text while
+  growing and narrower labels start text first, then shrink width `50ms` later
+- `animateSize: false` keeps size changes instant
+- fixed-to-auto and auto-to-fixed changes remain instant
+
+Flutter keeps auto-width target measurement in-tree. The hidden probe is an
+offstage sibling of the visible shell, so it does not use an overlay or route
+surface and it cannot intercept input.
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:rcaferati_flutter_awesome_button/rcaferati_flutter_awesome_button.dart';
+
+class SizeExample extends StatelessWidget {
+  const SizeExample({
+    required this.isLong,
+    super.key,
+  });
+
+  final bool isLong;
+
+  @override
+  Widget build(BuildContext context) {
+    final label = isLong ? 'Open analytics dashboard' : 'Open';
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ThemedButton(
+          name: ThemeName.basic,
+          autoWidth: true,
+          textTransition: true,
+          child: label,
+        ),
+        const SizedBox(height: 12),
+        ThemedButton(
+          name: ThemeName.basic,
+          autoWidth: true,
+          animateSize: false,
+          child: label,
+        ),
+      ],
+    );
+  }
+}
+```
+
 ## Progress Buttons
 
 When `progress` is enabled, `onPress` receives a `next` callback. Call it when
@@ -300,6 +356,7 @@ The public prop surface is typed through `AwesomeButton` and `ThemedButton`.
 | `progress` | `bool` | `false` | Enables the progress-button flow. `onPress` receives a `next` callback in this mode. |
 | `showProgressBar` | `bool` | `true` | Renders the loading bar during progress. When `false`, progress keeps the spinner and lifecycle but hides the bar. |
 | `progressLoadingTime` | `Duration` | `3000ms` | Duration of the loading bar travel in progress mode. |
+| `animateSize` | `bool` | `true` | Animates fixed-size geometry changes and auto-width string-label changes. |
 | `textTransition` | `bool` | `false` | Enables the built-in scramble/reveal animation when a plain string label changes after mount. |
 | `animatedPlaceholder` | `bool` | `true` | Enables the shimmer loop when the button has no `child`. |
 | `onPressIn` | `VoidCallback?` | `null` | Observer callback fired when press-in begins. |
@@ -320,7 +377,7 @@ The public prop surface is typed through `AwesomeButton` and `ThemedButton`.
 | `size` | `ButtonSize` | `ButtonSize.medium` | Built-in theme size preset: `icon`, `small`, `medium`, or `large`. |
 | `flat` | `bool` | `false` | Requests the `flat` theme variant when available. |
 | `transparent` | `bool` | `false` | Makes the visible shell layers transparent while keeping content, press, and progress feedback active. |
-| `autoWidth` | `bool` | `false` | Requests RN-style measured auto width instead of the size preset width. |
+| `autoWidth` | `bool` | `false` | Requests in-tree measured auto width instead of the size preset width. String labels can animate width changes. |
 
 ## Development
 
@@ -353,6 +410,13 @@ Run it from the package root with:
 cd example
 flutter run
 ```
+
+## Author
+
+**Rafael Caferati**  
+Website: https://caferati.dev  
+LinkedIn: https://linkedin.com/in/rcaferati  
+Instagram: https://instagram.com/rcaferati
 
 ## License
 
