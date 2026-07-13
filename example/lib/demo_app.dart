@@ -81,8 +81,13 @@ class _DemoShellState extends State<_DemoShell> {
             backgroundColor: _secondaryHeaderColor,
             foregroundColor: _secondaryHeaderForeground,
           ),
-        _ => AppBar(
+        2 => AppBar(
             title: const Text('Social Buttons'),
+            backgroundColor: _secondaryHeaderColor,
+            foregroundColor: _secondaryHeaderForeground,
+          ),
+        _ => AppBar(
+            title: const Text('Size Changes'),
             backgroundColor: _secondaryHeaderColor,
             foregroundColor: _secondaryHeaderForeground,
           ),
@@ -96,6 +101,7 @@ class _DemoShellState extends State<_DemoShell> {
           ),
           const _ProgressScreen(),
           const _SocialScreen(),
+          const _SizingScreen(),
         ],
       ),
       bottomNavigationBar: NavigationBar(
@@ -108,7 +114,7 @@ class _DemoShellState extends State<_DemoShell> {
         destinations: const [
           NavigationDestination(
             icon: Icon(FontAwesome.paint_brush),
-            label: 'Themed Buttons',
+            label: 'Themed',
           ),
           NavigationDestination(
             icon: Icon(Entypo.progress_two),
@@ -117,6 +123,10 @@ class _DemoShellState extends State<_DemoShell> {
           NavigationDestination(
             icon: Icon(Ionicons.share_social_sharp),
             label: 'Social',
+          ),
+          NavigationDestination(
+            icon: Icon(Ionicons.resize),
+            label: 'Size Changes',
           ),
         ],
       ),
@@ -336,10 +346,15 @@ class _ThemedButtonsScreenState extends State<_ThemedButtonsScreen> {
     'Mission#42',
     'Go#3',
   ];
+  static const List<String> _sizeTransitionLabels = <String>[
+    'Launch',
+    'View analytics dashboard',
+  ];
   static const Duration _heavyLoadDuration = Duration(milliseconds: 900);
 
   var _transitionVariantIndex = 0;
   var _textTransitionIndex = 0;
+  var _sizeTransitionIndex = 0;
 
   RegisteredThemeDefinition get _theme => getTheme(index: widget.index);
 
@@ -348,6 +363,9 @@ class _ThemedButtonsScreenState extends State<_ThemedButtonsScreen> {
 
   String get _textTransitionLabel =>
       _textTransitionLabels[_textTransitionIndex];
+
+  String get _sizeTransitionLabel =>
+      _sizeTransitionLabels[_sizeTransitionIndex];
 
   void _handleTimeout([AwesomeButtonNext? next]) {
     unawaited(
@@ -368,6 +386,13 @@ class _ThemedButtonsScreenState extends State<_ThemedButtonsScreen> {
     setState(() {
       _textTransitionIndex =
           (_textTransitionIndex + 1) % _textTransitionLabels.length;
+    });
+  }
+
+  void _handleSizeTransitionPress([AwesomeButtonNext? _]) {
+    setState(() {
+      _sizeTransitionIndex =
+          (_sizeTransitionIndex + 1) % _sizeTransitionLabels.length;
     });
   }
 
@@ -533,6 +558,38 @@ class _ThemedButtonsScreenState extends State<_ThemedButtonsScreen> {
                             type: ButtonVariant.flat,
                             size: ButtonSize.icon,
                             onPress: _handleTextTransitionPress,
+                            child: Icon(
+                              AntDesign.stepforward,
+                              size: 18,
+                              color: primaryColor ?? theme.color,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                _DemoSection(
+                  title: 'Size Transition',
+                  children: [
+                    _sectionButton(
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          ThemedButton(
+                            config: theme,
+                            autoWidth: true,
+                            textTransition: true,
+                            type: ButtonVariant.primary,
+                            child: _sizeTransitionLabel,
+                          ),
+                          ThemedButton(
+                            config: theme,
+                            type: ButtonVariant.flat,
+                            size: ButtonSize.icon,
+                            onPress: _handleSizeTransitionPress,
                             child: Icon(
                               AntDesign.stepforward,
                               size: 18,
@@ -1031,6 +1088,164 @@ class _SocialScreen extends StatelessWidget {
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _SizingScreen extends StatefulWidget {
+  const _SizingScreen();
+
+  @override
+  State<_SizingScreen> createState() => _SizingScreenState();
+}
+
+class _SizingScreenState extends State<_SizingScreen> {
+  static const List<ButtonSize> _themeSizes = <ButtonSize>[
+    ButtonSize.small,
+    ButtonSize.medium,
+    ButtonSize.large,
+  ];
+  static const TextStyle _captionStyle = TextStyle(
+    color: Color(0xFF5B6472),
+    fontSize: 13,
+    height: 20 / 13,
+  );
+  static const TextStyle _variantLabelStyle = TextStyle(
+    color: Color(0xFF6B7280),
+    fontSize: 12,
+    fontWeight: FontWeight.w700,
+    letterSpacing: 0.2,
+  );
+
+  var _isLongLabel = false;
+  var _sizeIndex = 1;
+
+  ButtonSize get _currentThemeSize => _themeSizes[_sizeIndex];
+
+  String get _autoWidthLabel =>
+      _isLongLabel ? 'View analytics dashboard' : 'Launch';
+
+  String get _currentThemeSizeLabel {
+    final name = _currentThemeSize.name;
+    return '${name[0].toUpperCase()}${name.substring(1)}';
+  }
+
+  void _toggleAutoWidthLabel([AwesomeButtonNext? _]) {
+    setState(() {
+      _isLongLabel = !_isLongLabel;
+    });
+  }
+
+  void _cycleThemeSize([AwesomeButtonNext? _]) {
+    setState(() {
+      _sizeIndex = (_sizeIndex + 1) % _themeSizes.length;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _DemoContainer(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _DemoSection(
+            title: 'Auto Width String Change',
+            children: [
+              const Padding(
+                padding: EdgeInsets.only(bottom: 10),
+                child: Text(
+                  'Evaluates how the button reacts when a plain string label switches between short and long content.',
+                  style: _captionStyle,
+                ),
+              ),
+              const _SizingVariantLabel('Animated with text transition'),
+              _sectionButton(
+                AwesomeButton(
+                  textTransition: true,
+                  child: _autoWidthLabel,
+                ),
+              ),
+              const _SizingVariantLabel('Animated without text transition'),
+              _sectionButton(
+                AwesomeButton(
+                  child: _autoWidthLabel,
+                ),
+              ),
+              const _SizingVariantLabel('Instant opt-out'),
+              _sectionButton(
+                AwesomeButton(
+                  animateSize: false,
+                  child: _autoWidthLabel,
+                ),
+              ),
+              _sectionButton(
+                ThemedButton(
+                  name: ThemeName.basic,
+                  type: ButtonVariant.secondary,
+                  onPress: _toggleAutoWidthLabel,
+                  child: 'Toggle Label Length',
+                ),
+              ),
+            ],
+          ),
+          _DemoSection(
+            title: 'Themed Fixed Size Change',
+            children: [
+              const Padding(
+                padding: EdgeInsets.only(bottom: 10),
+                child: Text(
+                  'Evaluates how a themed button behaves when its built-in size preset changes between fixed widths.',
+                  style: _captionStyle,
+                ),
+              ),
+              _sectionButton(
+                ThemedButton(
+                  name: ThemeName.basic,
+                  type: ButtonVariant.secondary,
+                  onPress: _cycleThemeSize,
+                  child: 'Cycle Theme Size',
+                ),
+              ),
+              const _SizingVariantLabel('Animated'),
+              _sectionButton(
+                ThemedButton(
+                  name: ThemeName.rick,
+                  type: ButtonVariant.primary,
+                  size: _currentThemeSize,
+                  child: _currentThemeSizeLabel,
+                ),
+              ),
+              const _SizingVariantLabel('Instant opt-out'),
+              _sectionButton(
+                ThemedButton(
+                  animateSize: false,
+                  name: ThemeName.rick,
+                  type: ButtonVariant.primary,
+                  size: _currentThemeSize,
+                  child: _currentThemeSizeLabel,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SizingVariantLabel extends StatelessWidget {
+  const _SizingVariantLabel(this.label);
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 6, bottom: 2),
+      child: Text(
+        label.toUpperCase(),
+        style: _SizingScreenState._variantLabelStyle,
       ),
     );
   }

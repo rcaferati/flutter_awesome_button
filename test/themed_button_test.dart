@@ -97,6 +97,11 @@ void main() {
     return (decoratedBoxes.first.decoration as BoxDecoration).color;
   }
 
+  Future<void> pumpAutoWidthMeasurement(WidgetTester tester) async {
+    await tester.pump();
+    await tester.pump();
+  }
+
   ThemeDefinition buildMinimalTheme({
     Map<ButtonVariant, ThemeButtonStyle>? buttons,
     Map<ButtonSize, ThemeSizeStyle>? size,
@@ -311,6 +316,76 @@ void main() {
     expect(richText.text.style?.fontSize, 12);
   });
 
+  testWidgets('size preset changes animate by default and snap when disabled', (
+    tester,
+  ) async {
+    const animatedKey = Key('animated-themed-size-button');
+
+    await tester.pumpWidget(
+      wrapForTest(
+        ThemedButton(
+          key: animatedKey,
+          config: buildMinimalTheme(),
+          size: ButtonSize.small,
+          onPress: _noop,
+          child: const Text('Size'),
+        ),
+      ),
+    );
+
+    await tester.pumpWidget(
+      wrapForTest(
+        ThemedButton(
+          key: animatedKey,
+          config: buildMinimalTheme(),
+          size: ButtonSize.large,
+          onPress: _noop,
+          child: const Text('Size'),
+        ),
+      ),
+    );
+
+    await tester.pump(const Duration(milliseconds: 60));
+    expect(tester.getSize(shellFinderFor(animatedKey)).width, greaterThan(120));
+    expect(tester.getSize(shellFinderFor(animatedKey)).width, lessThan(250));
+    expect(tester.getSize(faceFinderFor(animatedKey)).height, greaterThan(44));
+    expect(tester.getSize(faceFinderFor(animatedKey)).height, lessThan(60));
+
+    await tester.pumpAndSettle();
+    expect(tester.getSize(shellFinderFor(animatedKey)).width, 250);
+
+    const instantKey = Key('instant-themed-size-button');
+
+    await tester.pumpWidget(
+      wrapForTest(
+        ThemedButton(
+          key: instantKey,
+          animateSize: false,
+          config: buildMinimalTheme(),
+          size: ButtonSize.small,
+          onPress: _noop,
+          child: const Text('Size'),
+        ),
+      ),
+    );
+
+    await tester.pumpWidget(
+      wrapForTest(
+        ThemedButton(
+          key: instantKey,
+          animateSize: false,
+          config: buildMinimalTheme(),
+          size: ButtonSize.large,
+          onPress: _noop,
+          child: const Text('Size'),
+        ),
+      ),
+    );
+
+    expect(tester.getSize(shellFinderFor(instantKey)).width, 250);
+    expect(tester.getSize(faceFinderFor(instantKey)).height, 60);
+  });
+
   testWidgets('autoWidth bypasses themed size width presets', (tester) async {
     const buttonKey = Key('auto-width-themed-button');
 
@@ -330,6 +405,45 @@ void main() {
     final renderedWidth = tester.getSize(faceFinderFor(buttonKey)).width;
     expect(renderedWidth, lessThan(250));
     expect(renderedWidth, greaterThan(0));
+  });
+
+  testWidgets('autoWidth string labels use the base measured size path', (
+    tester,
+  ) async {
+    const buttonKey = Key('auto-width-themed-string-button');
+
+    await tester.pumpWidget(
+      wrapForTest(
+        ThemedButton(
+          key: buttonKey,
+          config: buildMinimalTheme(),
+          autoWidth: true,
+          textTransition: true,
+          onPress: _noop,
+          child: 'Open',
+        ),
+      ),
+    );
+    await pumpAutoWidthMeasurement(tester);
+    final shortWidth = tester.getSize(shellFinderFor(buttonKey)).width;
+
+    await tester.pumpWidget(
+      wrapForTest(
+        ThemedButton(
+          key: buttonKey,
+          config: buildMinimalTheme(),
+          autoWidth: true,
+          textTransition: true,
+          onPress: _noop,
+          child: 'Open analytics dashboard',
+        ),
+      ),
+    );
+    await pumpAutoWidthMeasurement(tester);
+    await tester.pumpAndSettle();
+
+    expect(tester.getSize(shellFinderFor(buttonKey)).width,
+        greaterThan(shortWidth));
   });
 
   testWidgets('caller overrides beat themed size and style defaults', (

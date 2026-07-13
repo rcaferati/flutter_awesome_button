@@ -2,13 +2,10 @@ import 'package:flutter/material.dart';
 
 import '../awesome_button.dart';
 import '../awesome_button_style.dart';
-import '../awesome_button_theme_data.dart';
 import 'colors.dart' as themed_colors;
 import 'models.dart';
 import 'resolution.dart';
 import 'themes.dart';
-
-const double _defaultThemedHorizontalPadding = 16;
 
 /// A typed wrapper around [AwesomeButton] that resolves built-in themes,
 /// variants, and sizes.
@@ -47,6 +44,7 @@ class ThemedButton extends StatefulWidget {
     this.progress = false,
     this.showProgressBar = true,
     this.progressLoadingTime = const Duration(milliseconds: 3000),
+    this.animateSize = true,
     this.onPressIn,
     this.onPressOut,
     this.onPressedIn,
@@ -147,6 +145,9 @@ class ThemedButton extends StatefulWidget {
 
   /// Default duration for the animated progress fill.
   final Duration progressLoadingTime;
+
+  /// Animates fixed-size and auto-width string-label size changes.
+  final bool animateSize;
 
   /// Callback fired when a pointer/touch down arms the pressed state.
   final VoidCallback? onPressIn;
@@ -281,59 +282,18 @@ class _ThemedButtonState extends State<ThemedButton>
     _transitionToPalette = null;
   }
 
-  double? _resolveAutoWidth(
-    BuildContext context, {
-    required ThemeButtonStyle resolvedButtonStyle,
+  double? _resolveAutoWidth({
     required ThemeSizeStyle resolvedSizeStyle,
-    required AwesomeButtonStyle effectiveStyle,
   }) {
     if (widget.stretch) {
       return widget.width;
     }
 
-    if (!widget.autoWidth || widget.width != null) {
-      return widget.width ?? resolvedSizeStyle.width;
-    }
-
-    final text = switch (widget.child) {
-      final String value when value.isNotEmpty => value,
-      final Text value when value.data != null && value.data!.isNotEmpty =>
-        value.data!,
-      _ => null,
-    };
-
-    if (text == null) {
+    if (widget.autoWidth && widget.width == null) {
       return null;
     }
 
-    final fallbackStyle = AwesomeButtonThemeData.fallbackStyle;
-    final textSize = effectiveStyle.textSize ?? fallbackStyle.textSize!;
-    final textLineHeight =
-        effectiveStyle.textLineHeight ?? fallbackStyle.textLineHeight!;
-    final textPainter = TextPainter(
-      text: TextSpan(
-        text: text,
-        style: TextStyle(
-          fontWeight: FontWeight.w700,
-          fontSize: textSize,
-          height: textSize > 0 ? textLineHeight / textSize : null,
-          fontFamily: effectiveStyle.textFontFamily,
-        ),
-      ),
-      maxLines: 1,
-      textDirection: Directionality.maybeOf(context) ?? TextDirection.ltr,
-    )..layout();
-
-    final paddingHorizontal = widget.paddingHorizontal ??
-        resolvedSizeStyle.paddingHorizontal ??
-        resolvedButtonStyle.paddingHorizontal ??
-        _defaultThemedHorizontalPadding;
-    final borderWidth =
-        effectiveStyle.borderWidth ?? fallbackStyle.borderWidth ?? 0;
-
-    return textPainter.width.ceilToDouble() +
-        (paddingHorizontal * 2) +
-        (borderWidth * 2);
+    return widget.width ?? resolvedSizeStyle.width;
   }
 
   _ResolvedThemedButtonData _resolveThemedData(ThemedButton widget) {
@@ -382,13 +342,10 @@ class _ThemedButtonState extends State<ThemedButton>
         .merge(sizeStyle)
         .merge(widget.style);
 
-    final resolvedButtonStyle = _resolvedData.resolvedButtonStyle;
     final resolvedSizeStyle = _resolvedData.sizeStyle;
+    final resolvedButtonStyle = _resolvedData.resolvedButtonStyle;
     final resolvedWidth = _resolveAutoWidth(
-      context,
-      resolvedButtonStyle: resolvedButtonStyle,
       resolvedSizeStyle: resolvedSizeStyle,
-      effectiveStyle: effectiveStyle,
     );
 
     return AwesomeButton(
@@ -414,6 +371,7 @@ class _ThemedButtonState extends State<ThemedButton>
       progress: widget.progress,
       showProgressBar: widget.showProgressBar,
       progressLoadingTime: widget.progressLoadingTime,
+      animateSize: widget.animateSize,
       textTransition: widget.textTransition,
       animatedPlaceholder: widget.animatedPlaceholder,
       onPressIn: widget.onPressIn,

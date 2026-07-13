@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'dart:math' as math;
+import 'dart:ui' show lerpDouble;
 
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/physics.dart';
+import 'package:flutter/rendering.dart';
 
 import 'awesome_button_style.dart';
 import 'awesome_button_theme_data.dart';
@@ -17,6 +19,22 @@ typedef AwesomeButtonPressCallback = void Function([AwesomeButtonNext? next]);
 
 const double _defaultHorizontalPadding = 16;
 const double _defaultVerticalPadding = 0;
+const Duration _sizeAnimationDuration = Duration(milliseconds: 125);
+const Curve _sizeAnimationCurve = Cubic(0.3, 0.05, 0.2, 1);
+const Duration _shrinkWidthAnimationDelay = Duration(milliseconds: 50);
+
+enum _ButtonWidthMode {
+  auto,
+  fixed,
+  stretch,
+}
+
+enum _AutoWidthTextFlow {
+  initial,
+  textOnly,
+  growFirst,
+  shrinkLast,
+}
 
 /// A layered 3D button with optional progress, themed styling, and slot-based
 /// content.
@@ -45,6 +63,7 @@ class AwesomeButton extends StatefulWidget {
     this.progress = false,
     this.showProgressBar = true,
     this.progressLoadingTime = const Duration(milliseconds: 3000),
+    this.animateSize = true,
     this.textTransition = false,
     this.animatedPlaceholder = true,
     this.onPressIn,
@@ -118,6 +137,9 @@ class AwesomeButton extends StatefulWidget {
   /// Default duration for the animated progress fill.
   final Duration progressLoadingTime;
 
+  /// Animates fixed-size and auto-width string-label size changes.
+  final bool animateSize;
+
   /// Enables string-only text transition effects between child updates.
   final bool textTransition;
 
@@ -176,6 +198,8 @@ class _AwesomeButtonState extends State<AwesomeButton>
   late final AnimationController _activityTransitionController;
   late final AnimationController _progressOverlayOpacityController;
   late final AnimationController _progressController;
+  late final AnimationController _widthController;
+  late final AnimationController _heightController;
   TextTransitionController? _textTransitionController;
 
   bool _hovered = false;
@@ -186,8 +210,23 @@ class _AwesomeButtonState extends State<AwesomeButton>
   bool _showProgressVisuals = false;
   bool _debounceActive = false;
   Timer? _debounceResetTimer;
+  Timer? _delayedWidthAnimationTimer;
   late String? _displayedText;
   late String? _currentTextTarget;
+  late _ButtonWidthMode _widthMode;
+  double? _resolvedWidth;
+  late double _resolvedHeight;
+  double? _widthAnimationFrom;
+  double? _widthAnimationTo;
+  late double _heightAnimationFrom;
+  late double _heightAnimationTo;
+  bool _isWidthAnimating = false;
+  bool _isHeightAnimating = false;
+  int _widthAnimationToken = 0;
+  int _heightAnimationToken = 0;
+  int _sizeRunId = 0;
+  int? _measurementRequestId;
+  String? _measurementText;
   Duration _pressAnimationDuration =
       AwesomeButtonThemeData.fallbackStyle.animationDuration!;
   Curve _pressAnimationCurve =
@@ -214,9 +253,28 @@ class _AwesomeButtonState extends State<AwesomeButton>
       vsync: this,
       duration: widget.progressLoadingTime,
     );
+    _widthController = AnimationController(
+      vsync: this,
+      duration: _sizeAnimationDuration,
+    );
+    _heightController = AnimationController(
+      vsync: this,
+      duration: _sizeAnimationDuration,
+    );
     final initialText = _extractStringChild(widget.child);
     _displayedText = initialText;
     _currentTextTarget = initialText;
+    _widthMode = _widthModeFor(widget);
+    _resolvedWidth = _widthMode == _ButtonWidthMode.fixed ? widget.width : null;
+    _resolvedHeight = widget.height;
+    _heightAnimationFrom = widget.height;
+    _heightAnimationTo = widget.height;
+    final initialMeasurementText = _autoWidthMeasurementTextFor(widget);
+    if (initialMeasurementText != null) {
+      _sizeRunId += 1;
+      _measurementRequestId = _sizeRunId;
+      _measurementText = initialMeasurementText;
+    }
   }
 
   @override
@@ -230,9 +288,16 @@ class _AwesomeButtonState extends State<AwesomeButton>
       _notifyPressOut();
       _releasePressedState();
     }
+    _syncSizeState(oldWidget);
     if (oldWidget.child != widget.child ||
+        oldWidget.width != widget.width ||
+        oldWidget.stretch != widget.stretch ||
+        oldWidget.before != widget.before ||
+        oldWidget.after != widget.after ||
+        oldWidget.extra != widget.extra ||
+        oldWidget.animateSize != widget.animateSize ||
         oldWidget.textTransition != widget.textTransition) {
-      _syncTextTransitionState();
+      _syncTextAndAutoWidthState();
     }
   }
 
@@ -243,7 +308,10 @@ class _AwesomeButtonState extends State<AwesomeButton>
     _activityTransitionController.dispose();
     _progressOverlayOpacityController.dispose();
     _progressController.dispose();
+    _widthController.dispose();
+    _heightController.dispose();
     _debounceResetTimer?.cancel();
+    _delayedWidthAnimationTimer?.cancel();
     _stopTextTransition();
     super.dispose();
   }
@@ -261,6 +329,75 @@ class _AwesomeButtonState extends State<AwesomeButton>
 
   String? _extractStringChild(Object? child) {
     return child is String ? child : null;
+  }
+
+  _ButtonWidthMode _widthModeFor(AwesomeButton widget) {
+    if (widget.stretch) {
+      return _ButtonWidthMode.stretch;
+    }
+
+    if (widget.width != null) {
+      return _ButtonWidthMode.fixed;
+    }
+
+    return _ButtonWidthMode.auto;
+  }
+
+  bool _canChoreographAutoWidthTextFor(AwesomeButton widget) {
+    final text = _extractStringChild(widget.child);
+
+    return _widthModeFor(widget) == _ButtonWidthMode.auto &&
+        text != null &&
+        text.isNotEmpty &&
+        widget.before == null &&
+        widget.after == null &&
+        widget.extra == null;
+  }
+
+  bool get _canChoreographAutoWidthText =>
+      _canChoreographAutoWidthTextFor(widget);
+
+  String? _autoWidthMeasurementTextFor(AwesomeButton widget) {
+    if (_widthModeFor(widget) != _ButtonWidthMode.auto ||
+        widget.before != null ||
+        widget.after != null ||
+        widget.extra != null) {
+      return null;
+    }
+
+    return switch (widget.child) {
+      final String value when value.isNotEmpty => value,
+      _ => null,
+    };
+  }
+
+  double? get _currentWidthSnapshot {
+    final from = _widthAnimationFrom;
+    final to = _widthAnimationTo;
+
+    if (_isWidthAnimating && from != null && to != null) {
+      return lerpDouble(
+          from,
+          to,
+          _sizeAnimationCurve.transform(
+            _widthController.value,
+          ));
+    }
+
+    return _resolvedWidth;
+  }
+
+  double get _currentHeightSnapshot {
+    if (_isHeightAnimating) {
+      return lerpDouble(
+            _heightAnimationFrom,
+            _heightAnimationTo,
+            _sizeAnimationCurve.transform(_heightController.value),
+          ) ??
+          _resolvedHeight;
+    }
+
+    return _resolvedHeight;
   }
 
   EdgeInsets get _contentPadding {
@@ -369,7 +506,158 @@ class _AwesomeButtonState extends State<AwesomeButton>
     return true;
   }
 
+  void _cancelDelayedWidthAnimation() {
+    _delayedWidthAnimationTimer?.cancel();
+    _delayedWidthAnimationTimer = null;
+  }
+
+  void _clearMeasurementRequest() {
+    if (_measurementText == null && _measurementRequestId == null) {
+      return;
+    }
+
+    setState(() {
+      _measurementText = null;
+      _measurementRequestId = null;
+    });
+  }
+
+  void _setWidthImmediately(double? nextWidth) {
+    _widthAnimationToken += 1;
+    _widthController.stop();
+
+    if (_resolvedWidth == nextWidth && !_isWidthAnimating) {
+      return;
+    }
+
+    setState(() {
+      _resolvedWidth = nextWidth;
+      _widthAnimationFrom = null;
+      _widthAnimationTo = null;
+      _isWidthAnimating = false;
+    });
+  }
+
+  void _animateWidthTo(double nextWidth, {VoidCallback? onComplete}) {
+    final currentWidth = _currentWidthSnapshot;
+
+    if (widget.animateSize == false ||
+        currentWidth == null ||
+        (currentWidth - nextWidth).abs() < 0.5) {
+      _setWidthImmediately(nextWidth);
+      onComplete?.call();
+      return;
+    }
+
+    _widthAnimationToken += 1;
+    final animationToken = _widthAnimationToken;
+    _widthController.stop();
+
+    setState(() {
+      _widthAnimationFrom = currentWidth;
+      _widthAnimationTo = nextWidth;
+      _isWidthAnimating = true;
+    });
+
+    _widthController.forward(from: 0).orCancel.then((_) {
+      if (!mounted || _widthAnimationToken != animationToken) {
+        return;
+      }
+
+      setState(() {
+        _resolvedWidth = nextWidth;
+        _widthAnimationFrom = null;
+        _widthAnimationTo = null;
+        _isWidthAnimating = false;
+      });
+      onComplete?.call();
+    }).catchError((Object _) {
+      return;
+    }, test: (error) => error is TickerCanceled);
+  }
+
+  void _setHeightImmediately(double nextHeight) {
+    _heightAnimationToken += 1;
+    _heightController.stop();
+
+    if ((_resolvedHeight - nextHeight).abs() < 0.5 && !_isHeightAnimating) {
+      return;
+    }
+
+    setState(() {
+      _resolvedHeight = nextHeight;
+      _heightAnimationFrom = nextHeight;
+      _heightAnimationTo = nextHeight;
+      _isHeightAnimating = false;
+    });
+  }
+
+  void _animateHeightTo(double nextHeight) {
+    final currentHeight = _currentHeightSnapshot;
+
+    if (widget.animateSize == false ||
+        (currentHeight - nextHeight).abs() < 0.5) {
+      _setHeightImmediately(nextHeight);
+      return;
+    }
+
+    _heightAnimationToken += 1;
+    final animationToken = _heightAnimationToken;
+    _heightController.stop();
+
+    setState(() {
+      _heightAnimationFrom = currentHeight;
+      _heightAnimationTo = nextHeight;
+      _isHeightAnimating = true;
+    });
+
+    _heightController.forward(from: 0).orCancel.then((_) {
+      if (!mounted || _heightAnimationToken != animationToken) {
+        return;
+      }
+
+      setState(() {
+        _resolvedHeight = nextHeight;
+        _heightAnimationFrom = nextHeight;
+        _heightAnimationTo = nextHeight;
+        _isHeightAnimating = false;
+      });
+    }).catchError((Object _) {
+      return;
+    }, test: (error) => error is TickerCanceled);
+  }
+
+  void _syncSizeState(AwesomeButton oldWidget) {
+    final previousWidthMode = _widthMode;
+    final nextWidthMode = _widthModeFor(widget);
+    _widthMode = nextWidthMode;
+
+    if (previousWidthMode != nextWidthMode) {
+      _sizeRunId += 1;
+      _stopTextTransition();
+      _cancelDelayedWidthAnimation();
+      _clearMeasurementRequest();
+
+      if (nextWidthMode == _ButtonWidthMode.fixed) {
+        _setWidthImmediately(widget.width);
+      } else {
+        _setWidthImmediately(null);
+      }
+    } else if (nextWidthMode == _ButtonWidthMode.fixed &&
+        widget.width != null &&
+        (oldWidget.width != widget.width ||
+            oldWidget.animateSize != widget.animateSize)) {
+      _animateWidthTo(widget.width!);
+    }
+
+    if (oldWidget.height != widget.height ||
+        oldWidget.animateSize != widget.animateSize) {
+      _animateHeightTo(widget.height);
+    }
+  }
+
   void _stopTextTransition() {
+    _cancelDelayedWidthAnimation();
     _textTransitionController?.stop();
     _textTransitionController = null;
   }
@@ -381,6 +669,182 @@ class _AwesomeButtonState extends State<AwesomeButton>
 
     setState(() {
       _displayedText = value;
+    });
+  }
+
+  _AutoWidthTextFlow _autoWidthTextFlow(
+      double? currentWidth, double nextWidth) {
+    if (currentWidth == null) {
+      return _AutoWidthTextFlow.initial;
+    }
+
+    if ((currentWidth - nextWidth).abs() < 0.5) {
+      return _AutoWidthTextFlow.textOnly;
+    }
+
+    return nextWidth > currentWidth
+        ? _AutoWidthTextFlow.growFirst
+        : _AutoWidthTextFlow.shrinkLast;
+  }
+
+  void _runTextPhase(
+    int runId,
+    String? targetText, {
+    VoidCallback? onComplete,
+  }) {
+    _stopTextTransition();
+
+    if (widget.textTransition == false ||
+        targetText == null ||
+        targetText.isEmpty ||
+        _displayedText == null ||
+        _displayedText!.isEmpty ||
+        _displayedText == targetText) {
+      _updateDisplayedText(targetText);
+      onComplete?.call();
+      return;
+    }
+
+    final fromText = _displayedText!;
+    _textTransitionController = runTextTransition(
+      fromText: fromText,
+      targetText: targetText,
+      onUpdate: (value) {
+        if (!mounted || _sizeRunId != runId) {
+          return;
+        }
+        _updateDisplayedText(value);
+      },
+      onComplete: () {
+        _textTransitionController = null;
+        if (!mounted || _sizeRunId != runId) {
+          return;
+        }
+        _updateDisplayedText(targetText);
+        onComplete?.call();
+      },
+    );
+  }
+
+  void _requestAutoWidthMeasurement(int runId, String text) {
+    setState(() {
+      _measurementRequestId = runId;
+      _measurementText = text;
+    });
+  }
+
+  void _syncAutoWidthTextState() {
+    final nextText = _stringChild;
+
+    if (nextText == null || nextText.isEmpty) {
+      _syncTextTransitionState();
+      return;
+    }
+
+    if (nextText == _currentTextTarget && _resolvedWidth != null) {
+      return;
+    }
+
+    _stopTextTransition();
+    _sizeRunId += 1;
+    _currentTextTarget = nextText;
+    _requestAutoWidthMeasurement(_sizeRunId, nextText);
+  }
+
+  void _syncTextAndAutoWidthState() {
+    if (_canChoreographAutoWidthText) {
+      _syncAutoWidthTextState();
+      return;
+    }
+
+    final measurementText = _autoWidthMeasurementTextFor(widget);
+    if (measurementText != null) {
+      _sizeRunId += 1;
+      _requestAutoWidthMeasurement(_sizeRunId, measurementText);
+    } else {
+      _clearMeasurementRequest();
+    }
+    _syncTextTransitionState();
+  }
+
+  void _handleAutoWidthMeasured(_AutoWidthMeasurement measurement) {
+    if (!mounted ||
+        _measurementRequestId != measurement.requestId ||
+        _measurementText == null) {
+      return;
+    }
+
+    final targetText = _measurementText!;
+    final measuredWidth = measurement.width.ceilToDouble();
+
+    setState(() {
+      _measurementText = null;
+      _measurementRequestId = null;
+    });
+
+    _resolveMeasuredAutoWidth(measurement.requestId, targetText, measuredWidth);
+  }
+
+  void _resolveMeasuredAutoWidth(
+    int runId,
+    String targetText,
+    double nextWidth,
+  ) {
+    if (!mounted || _sizeRunId != runId) {
+      return;
+    }
+
+    if (!_canChoreographAutoWidthText) {
+      _setWidthImmediately(nextWidth);
+      return;
+    }
+
+    final flow = _autoWidthTextFlow(_currentWidthSnapshot, nextWidth);
+
+    if (flow == _AutoWidthTextFlow.initial) {
+      _setWidthImmediately(nextWidth);
+      _updateDisplayedText(targetText);
+      return;
+    }
+
+    if (flow == _AutoWidthTextFlow.textOnly) {
+      _runTextPhase(runId, targetText);
+      return;
+    }
+
+    if (flow == _AutoWidthTextFlow.growFirst) {
+      if (widget.textTransition) {
+        _animateWidthTo(nextWidth);
+        _runTextPhase(runId, targetText);
+        return;
+      }
+
+      _animateWidthTo(nextWidth, onComplete: () {
+        if (!mounted || _sizeRunId != runId) {
+          return;
+        }
+        _runTextPhase(runId, targetText);
+      });
+      return;
+    }
+
+    if (widget.textTransition) {
+      _runTextPhase(runId, targetText);
+      _delayedWidthAnimationTimer = Timer(_shrinkWidthAnimationDelay, () {
+        _delayedWidthAnimationTimer = null;
+        if (!mounted || _sizeRunId != runId) {
+          return;
+        }
+        _animateWidthTo(nextWidth);
+      });
+      return;
+    }
+
+    _runTextPhase(runId, targetText, onComplete: () {
+      if (!mounted || _sizeRunId != runId) {
+        return;
+      }
+      _animateWidthTo(nextWidth);
     });
   }
 
@@ -411,19 +875,21 @@ class _AwesomeButtonState extends State<AwesomeButton>
     }
 
     _stopTextTransition();
+    _sizeRunId += 1;
+    final runId = _sizeRunId;
     _currentTextTarget = nextText;
     _textTransitionController = runTextTransition(
       fromText: previousText,
       targetText: nextText,
       onUpdate: (value) {
-        if (!mounted) {
+        if (!mounted || _sizeRunId != runId) {
           return;
         }
         _updateDisplayedText(value);
       },
       onComplete: () {
         _textTransitionController = null;
-        if (!mounted) {
+        if (!mounted || _sizeRunId != runId) {
           return;
         }
         _updateDisplayedText(nextText);
@@ -627,10 +1093,6 @@ class _AwesomeButtonState extends State<AwesomeButton>
     _pressAnimationCurve = resolvedStyle.animationCurve;
     final direction = Directionality.of(context);
     final borderRadius = resolvedStyle.borderRadius.resolve(direction);
-    final totalHeight = widget.height + resolvedStyle.raiseAmount;
-    final shadowHeight =
-        math.max(0.0, widget.height - resolvedStyle.raiseAmount);
-    final shellWidth = widget.stretch ? double.infinity : widget.width;
     final shell = AnimatedBuilder(
       animation: Listenable.merge([
         _pressController,
@@ -638,8 +1100,20 @@ class _AwesomeButtonState extends State<AwesomeButton>
         _contentTransitionController,
         _activityTransitionController,
         _progressOverlayOpacityController,
+        _widthController,
+        _heightController,
       ]),
       builder: (context, child) {
+        final visualHeight = _currentHeightSnapshot;
+        final totalHeight = visualHeight + resolvedStyle.raiseAmount;
+        final shadowHeight =
+            math.max(0.0, visualHeight - resolvedStyle.raiseAmount);
+        final shellWidth = switch (_widthMode) {
+          _ButtonWidthMode.stretch => double.infinity,
+          _ButtonWidthMode.fixed => _currentWidthSnapshot,
+          _ButtonWidthMode.auto => _currentWidthSnapshot,
+        };
+        final stretchFace = widget.stretch || shellWidth != null;
         final pressValue = _pressController.value;
         final clampedPressValue = pressValue.clamp(0.0, 1.0);
         final faceOffset = resolvedStyle.raiseAmount * pressValue;
@@ -675,7 +1149,7 @@ class _AwesomeButtonState extends State<AwesomeButton>
               child: Padding(
                 padding: EdgeInsets.only(top: resolvedStyle.raiseAmount),
                 child: _ButtonBottomLayer(
-                  height: widget.height,
+                  height: visualHeight,
                   backgroundColor: resolvedStyle.depthColor,
                   borderRadius: borderRadius,
                   borderColor: resolvedStyle.borderColor,
@@ -687,8 +1161,8 @@ class _AwesomeButtonState extends State<AwesomeButton>
             Transform.translate(
               offset: Offset(0, faceOffset),
               child: _ButtonFaceLayer(
-                stretch: widget.stretch || widget.width != null,
-                height: widget.height,
+                stretch: stretchFace,
+                height: visualHeight,
                 padding: _contentPadding,
                 borderRadius: borderRadius,
                 backgroundColor: resolvedStyle.backgroundColor,
@@ -740,6 +1214,26 @@ class _AwesomeButtonState extends State<AwesomeButton>
         );
       },
     );
+    final measurementText = _measurementText;
+    final measurementRequestId = _measurementRequestId;
+    final interactiveChild = Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        shell,
+        if (measurementText != null && measurementRequestId != null)
+          _AutoWidthMeasurementProbe(
+            requestId: measurementRequestId,
+            text: measurementText,
+            padding: _contentPadding,
+            borderWidth: resolvedStyle.borderWidth,
+            foregroundColor: resolvedStyle.foregroundColor,
+            textSize: resolvedStyle.textSize,
+            textLineHeight: resolvedStyle.textLineHeight,
+            textFontFamily: resolvedStyle.textFontFamily,
+            onMeasured: _handleAutoWidthMeasured,
+          ),
+      ],
+    );
 
     return Semantics(
       button: true,
@@ -785,7 +1279,7 @@ class _AwesomeButtonState extends State<AwesomeButton>
             onLongPress: _canStartGesture && widget.onLongPress != null
                 ? widget.onLongPress
                 : null,
-            child: shell,
+            child: interactiveChild,
           ),
         ),
       ),
@@ -915,6 +1409,146 @@ class _ResolvedAwesomeButtonStyle {
   final double contentGap;
   final Duration animationDuration;
   final Curve animationCurve;
+}
+
+class _AutoWidthMeasurement {
+  const _AutoWidthMeasurement({
+    required this.requestId,
+    required this.width,
+  });
+
+  final int requestId;
+  final double width;
+}
+
+class _AutoWidthMeasurementProbe extends StatelessWidget {
+  const _AutoWidthMeasurementProbe({
+    required this.requestId,
+    required this.text,
+    required this.padding,
+    required this.borderWidth,
+    required this.foregroundColor,
+    required this.textSize,
+    required this.textLineHeight,
+    required this.textFontFamily,
+    required this.onMeasured,
+  });
+
+  final int requestId;
+  final String text;
+  final EdgeInsets padding;
+  final double borderWidth;
+  final Color foregroundColor;
+  final double textSize;
+  final double textLineHeight;
+  final String? textFontFamily;
+  final ValueChanged<_AutoWidthMeasurement> onMeasured;
+
+  @override
+  Widget build(BuildContext context) {
+    return Offstage(
+      offstage: true,
+      child: IgnorePointer(
+        child: ExcludeSemantics(
+          child: TickerMode(
+            enabled: false,
+            child: OverflowBox(
+              alignment: Alignment.topLeft,
+              fit: OverflowBoxFit.deferToChild,
+              minWidth: 0,
+              maxWidth: double.infinity,
+              minHeight: 0,
+              maxHeight: double.infinity,
+              child: _MeasureSize(
+                onChange: (size) {
+                  onMeasured(
+                    _AutoWidthMeasurement(
+                      requestId: requestId,
+                      width: size.width,
+                    ),
+                  );
+                },
+                child: DecoratedBox(
+                  key: const ValueKey<String>('aws-btn-auto-width-measure'),
+                  decoration: BoxDecoration(
+                    border: borderWidth > 0
+                        ? Border.all(
+                            color: Colors.transparent,
+                            width: borderWidth,
+                          )
+                        : null,
+                  ),
+                  child: Padding(
+                    padding: EdgeInsets.all(borderWidth) + padding,
+                    child: DefaultTextStyle.merge(
+                      style: TextStyle(
+                        color: foregroundColor,
+                        fontWeight: FontWeight.w700,
+                        fontSize: textSize,
+                        height: textSize > 0 ? textLineHeight / textSize : null,
+                        fontFamily: textFontFamily,
+                      ),
+                      child: Text(
+                        text,
+                        maxLines: 1,
+                        softWrap: false,
+                        overflow: TextOverflow.clip,
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _MeasureSize extends SingleChildRenderObjectWidget {
+  const _MeasureSize({
+    required this.onChange,
+    required super.child,
+  });
+
+  final ValueChanged<Size> onChange;
+
+  @override
+  RenderObject createRenderObject(BuildContext context) {
+    return _RenderMeasureSize(onChange);
+  }
+
+  @override
+  void updateRenderObject(
+    BuildContext context,
+    covariant _RenderMeasureSize renderObject,
+  ) {
+    renderObject.onChange = onChange;
+  }
+}
+
+class _RenderMeasureSize extends RenderProxyBox {
+  _RenderMeasureSize(this.onChange);
+
+  ValueChanged<Size> onChange;
+  Size? _previousSize;
+
+  @override
+  void performLayout() {
+    super.performLayout();
+    final nextSize = child?.size ?? size;
+
+    if (_previousSize == nextSize) {
+      return;
+    }
+
+    _previousSize = nextSize;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      onChange(nextSize);
+    });
+  }
 }
 
 class _ButtonShadowLayer extends StatelessWidget {
@@ -1057,7 +1691,8 @@ class _ButtonFaceLayer extends StatelessWidget {
           displayedText ?? text,
           key: const ValueKey<String>('aws-btn-content-text'),
           maxLines: 1,
-          overflow: TextOverflow.ellipsis,
+          softWrap: false,
+          overflow: TextOverflow.clip,
           textAlign: TextAlign.center,
         ),
       final Widget widget => widget,
@@ -1082,119 +1717,119 @@ class _ButtonFaceLayer extends StatelessWidget {
             padding: contentInset,
             child: ClipRRect(
               borderRadius: innerBorderRadius,
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  final maxWidth =
-                      constraints.hasBoundedWidth ? constraints.maxWidth : 0.0;
-                  final progressTranslateX =
-                      maxWidth * (progressValue.clamp(0.0, 1.0) - 1);
-
-                  return Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      if (extra != null) IgnorePointer(child: extra!),
-                      if (activeBackgroundColor.a > 0)
-                        IgnorePointer(
-                          child: Opacity(
-                            key: const ValueKey<String>(
-                                'aws-btn-active-background'),
-                            opacity: activeBackgroundOpacity.clamp(0.0, 1.0),
-                            child: DecoratedBox(
-                              decoration:
-                                  BoxDecoration(color: activeBackgroundColor),
-                            ),
+              child: Stack(
+                alignment: Alignment.center,
+                fit: stretch ? StackFit.expand : StackFit.loose,
+                children: [
+                  if (extra != null)
+                    Positioned.fill(child: IgnorePointer(child: extra!)),
+                  if (activeBackgroundColor.a > 0)
+                    Positioned.fill(
+                      child: IgnorePointer(
+                        child: Opacity(
+                          key: const ValueKey<String>(
+                              'aws-btn-active-background'),
+                          opacity: activeBackgroundOpacity.clamp(0.0, 1.0),
+                          child: DecoratedBox(
+                            decoration:
+                                BoxDecoration(color: activeBackgroundColor),
                           ),
                         ),
-                      if (showProgressVisuals && showProgressBar)
-                        IgnorePointer(
-                          child: Opacity(
-                            key: const ValueKey<String>(
-                                'aws-btn-progress-overlay'),
-                            opacity: overlayOpacity,
-                            child: Transform.translate(
-                              offset: Offset(progressTranslateX, 0),
-                              child: DecoratedBox(
-                                key: const ValueKey<String>(
-                                    'aws-btn-progress-fill'),
-                                decoration: BoxDecoration(
-                                  color: progressFillColor,
-                                ),
+                      ),
+                    ),
+                  if (showProgressVisuals && showProgressBar)
+                    Positioned.fill(
+                      child: IgnorePointer(
+                        child: Opacity(
+                          key: const ValueKey<String>(
+                              'aws-btn-progress-overlay'),
+                          opacity: overlayOpacity,
+                          child: FractionalTranslation(
+                            translation: Offset(
+                              progressValue.clamp(0.0, 1.0) - 1,
+                              0,
+                            ),
+                            child: DecoratedBox(
+                              key: const ValueKey<String>(
+                                  'aws-btn-progress-fill'),
+                              decoration: BoxDecoration(
+                                color: progressFillColor,
                               ),
                             ),
                           ),
                         ),
-                      Padding(
-                        padding: padding,
-                        child: Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            Transform.scale(
+                      ),
+                    ),
+                  Padding(
+                    padding: padding,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        Transform.scale(
+                          key: const ValueKey<String>(
+                              'aws-btn-content-transition'),
+                          scale: contentTransitionValue,
+                          child: Opacity(
+                            key: const ValueKey<String>(
+                                'aws-btn-content-opacity'),
+                            opacity: contentOpacity,
+                            child: hasPlaceholder
+                                ? _ButtonPlaceholder(
+                                    animated: animatedPlaceholder,
+                                    backgroundColor: backgroundPlaceholderColor,
+                                    height: textLineHeight,
+                                  )
+                                : _ButtonContent(
+                                    stretch: stretch,
+                                    foregroundColor: foregroundColor,
+                                    gap: contentGap,
+                                    before: before,
+                                    after: after,
+                                    textSize: textSize,
+                                    textLineHeight: textLineHeight,
+                                    textFontFamily: textFontFamily,
+                                    child: renderedChild,
+                                  ),
+                          ),
+                        ),
+                        if (showProgressVisuals)
+                          IgnorePointer(
+                            child: Transform.scale(
                               key: const ValueKey<String>(
-                                  'aws-btn-content-transition'),
-                              scale: contentTransitionValue,
+                                  'aws-btn-activity-transition'),
+                              scale: activityTransitionValue,
                               child: Opacity(
                                 key: const ValueKey<String>(
-                                    'aws-btn-content-opacity'),
-                                opacity: contentOpacity,
-                                child: hasPlaceholder
-                                    ? _ButtonPlaceholder(
-                                        animated: animatedPlaceholder,
-                                        backgroundColor:
-                                            backgroundPlaceholderColor,
-                                        height: textLineHeight,
-                                      )
-                                    : _ButtonContent(
-                                        stretch: stretch,
-                                        foregroundColor: foregroundColor,
-                                        gap: contentGap,
-                                        before: before,
-                                        after: after,
-                                        textSize: textSize,
-                                        textLineHeight: textLineHeight,
-                                        textFontFamily: textFontFamily,
-                                        child: renderedChild,
-                                      ),
-                              ),
-                            ),
-                            if (showProgressVisuals)
-                              IgnorePointer(
-                                child: Transform.scale(
-                                  key: const ValueKey<String>(
-                                      'aws-btn-activity-transition'),
-                                  scale: activityTransitionValue,
-                                  child: Opacity(
-                                    key: const ValueKey<String>(
-                                        'aws-btn-activity-opacity'),
-                                    opacity: activityOpacity,
-                                    child: Center(
-                                      child: SizedBox.square(
-                                        dimension: 18,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2.4,
-                                          valueColor:
-                                              AlwaysStoppedAnimation<Color>(
-                                            activityColor,
-                                          ),
-                                        ),
+                                    'aws-btn-activity-opacity'),
+                                opacity: activityOpacity,
+                                child: Center(
+                                  child: SizedBox.square(
+                                    dimension: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2.4,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        activityColor,
                                       ),
                                     ),
                                   ),
                                 ),
                               ),
-                          ],
-                        ),
-                      ),
-                      if (hoverOverlayColor.a > 0)
-                        IgnorePointer(
-                          child: DecoratedBox(
-                            decoration: BoxDecoration(
-                              color: hoverOverlayColor,
                             ),
                           ),
+                      ],
+                    ),
+                  ),
+                  if (hoverOverlayColor.a > 0)
+                    Positioned.fill(
+                      child: IgnorePointer(
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: hoverOverlayColor,
+                          ),
                         ),
-                    ],
-                  );
-                },
+                      ),
+                    ),
+                ],
               ),
             ),
           ),
@@ -1269,7 +1904,6 @@ class _ButtonContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hasSideContent = before != null || after != null;
     return DefaultTextStyle.merge(
       style: TextStyle(
         color: foregroundColor,
@@ -1282,10 +1916,8 @@ class _ButtonContent extends StatelessWidget {
       ),
       child: IconTheme(
         data: IconThemeData(color: foregroundColor),
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final canConstrainCenterChild =
-                stretch || hasSideContent || constraints.hasBoundedWidth;
+        child: Builder(
+          builder: (context) {
             final entries = <Widget>[
               if (before != null) before!,
               child,
@@ -1301,17 +1933,12 @@ class _ButtonContent extends StatelessWidget {
               final isCenterChild = before != null ? index == 1 : index == 0;
 
               rowChildren.add(
-                isCenterChild && canConstrainCenterChild
-                    ? Flexible(child: entry)
-                    : entry,
+                isCenterChild && stretch ? Flexible(child: entry) : entry,
               );
             }
 
             return Row(
-              mainAxisSize:
-                  stretch || hasSideContent || constraints.hasBoundedWidth
-                      ? MainAxisSize.max
-                      : MainAxisSize.min,
+              mainAxisSize: stretch ? MainAxisSize.max : MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.center,
               children: rowChildren,
             );

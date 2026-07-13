@@ -156,6 +156,11 @@ void main() {
     }
   }
 
+  Future<void> pumpAutoWidthMeasurement(WidgetTester tester) async {
+    await tester.pump();
+    await tester.pump();
+  }
+
   testWidgets('renders child content', (tester) async {
     await tester.pumpWidget(
       wrapForTest(
@@ -371,6 +376,279 @@ void main() {
     expect(shadowRect.bottom, greaterThan(bottomRect.bottom));
     expect(shadowRect.left, greaterThan(bottomRect.left));
     expect(shadowRect.right, lessThan(bottomRect.right));
+  });
+
+  testWidgets('fixed width and height changes animate by default', (
+    tester,
+  ) async {
+    const buttonKey = Key('animated-size-button');
+
+    await tester.pumpWidget(
+      wrapForTest(
+        const AwesomeButton(
+          key: buttonKey,
+          width: 120,
+          height: 52,
+          onPress: _noop,
+          child: Text('Size'),
+        ),
+      ),
+    );
+
+    await tester.pumpWidget(
+      wrapForTest(
+        const AwesomeButton(
+          key: buttonKey,
+          width: 220,
+          height: 64,
+          onPress: _noop,
+          child: Text('Size'),
+        ),
+      ),
+    );
+
+    await tester.pump(const Duration(milliseconds: 60));
+
+    final midSize = tester.getSize(shellFinderFor(buttonKey));
+    expect(midSize.width, greaterThan(120));
+    expect(midSize.width, lessThan(220));
+    expect(tester.getSize(faceFinderFor(buttonKey)).height, greaterThan(52));
+    expect(tester.getSize(faceFinderFor(buttonKey)).height, lessThan(64));
+
+    await tester.pumpAndSettle();
+
+    expect(tester.getSize(shellFinderFor(buttonKey)).width, 220);
+    expect(tester.getSize(faceFinderFor(buttonKey)).height, 64);
+  });
+
+  testWidgets('fixed size changes snap when animateSize is disabled', (
+    tester,
+  ) async {
+    const buttonKey = Key('instant-size-button');
+
+    await tester.pumpWidget(
+      wrapForTest(
+        const AwesomeButton(
+          key: buttonKey,
+          animateSize: false,
+          width: 120,
+          height: 52,
+          onPress: _noop,
+          child: Text('Size'),
+        ),
+      ),
+    );
+
+    await tester.pumpWidget(
+      wrapForTest(
+        const AwesomeButton(
+          key: buttonKey,
+          animateSize: false,
+          width: 220,
+          height: 64,
+          onPress: _noop,
+          child: Text('Size'),
+        ),
+      ),
+    );
+
+    expect(tester.getSize(shellFinderFor(buttonKey)).width, 220);
+    expect(tester.getSize(faceFinderFor(buttonKey)).height, 64);
+  });
+
+  testWidgets(
+      'auto-width string labels grow and shrink with no text transition', (
+    tester,
+  ) async {
+    const buttonKey = Key('auto-width-size-button');
+
+    await tester.pumpWidget(
+      wrapForTest(
+        const AwesomeButton(
+          key: buttonKey,
+          child: 'Open',
+        ),
+      ),
+    );
+    await pumpAutoWidthMeasurement(tester);
+
+    final shortWidth = tester.getSize(shellFinderFor(buttonKey)).width;
+
+    await tester.pumpWidget(
+      wrapForTest(
+        const AwesomeButton(
+          key: buttonKey,
+          child: 'Open analytics dashboard',
+        ),
+      ),
+    );
+    await pumpAutoWidthMeasurement(tester);
+
+    expect(
+      tester
+          .widget<Text>(
+            find.byKey(const ValueKey<String>('aws-btn-content-text')),
+          )
+          .data,
+      'Open',
+    );
+
+    await tester.pumpAndSettle();
+
+    final longWidth = tester.getSize(shellFinderFor(buttonKey)).width;
+    expect(longWidth, greaterThan(shortWidth));
+    expect(
+      tester
+          .widget<Text>(
+            find.byKey(const ValueKey<String>('aws-btn-content-text')),
+          )
+          .data,
+      'Open analytics dashboard',
+    );
+
+    await tester.pumpWidget(
+      wrapForTest(
+        const AwesomeButton(
+          key: buttonKey,
+          child: 'Open',
+        ),
+      ),
+    );
+    await pumpAutoWidthMeasurement(tester);
+
+    expect(
+      tester
+          .widget<Text>(
+            find.byKey(const ValueKey<String>('aws-btn-content-text')),
+          )
+          .data,
+      'Open',
+    );
+
+    await tester.pumpAndSettle();
+    expect(tester.getSize(shellFinderFor(buttonKey)).width, shortWidth);
+  });
+
+  testWidgets('auto-width with textTransition grows text and width together', (
+    tester,
+  ) async {
+    const buttonKey = Key('auto-width-transition-grow-button');
+
+    await tester.pumpWidget(
+      wrapForTest(
+        const AwesomeButton(
+          key: buttonKey,
+          textTransition: true,
+          child: 'Open',
+        ),
+      ),
+    );
+    await pumpAutoWidthMeasurement(tester);
+    final shortWidth = tester.getSize(shellFinderFor(buttonKey)).width;
+
+    await tester.pumpWidget(
+      wrapForTest(
+        const AwesomeButton(
+          key: buttonKey,
+          textTransition: true,
+          child: 'Open analytics dashboard',
+        ),
+      ),
+    );
+    await pumpAutoWidthMeasurement(tester);
+    await pumpTextTransitionFrames(tester);
+
+    final midText = tester
+        .widget<Text>(
+          find.byKey(const ValueKey<String>('aws-btn-content-text')),
+        )
+        .data!;
+    expect(midText, isNot('Open'));
+    expect(midText, isNot('Open analytics dashboard'));
+    expect(tester.getSize(shellFinderFor(buttonKey)).width,
+        greaterThan(shortWidth));
+  });
+
+  testWidgets('auto-width with textTransition delays shrink width by 50ms', (
+    tester,
+  ) async {
+    const buttonKey = Key('auto-width-transition-shrink-button');
+
+    await tester.pumpWidget(
+      wrapForTest(
+        const AwesomeButton(
+          key: buttonKey,
+          textTransition: true,
+          child: 'Open analytics dashboard',
+        ),
+      ),
+    );
+    await pumpAutoWidthMeasurement(tester);
+    final longWidth = tester.getSize(shellFinderFor(buttonKey)).width;
+
+    await tester.pumpWidget(
+      wrapForTest(
+        const AwesomeButton(
+          key: buttonKey,
+          textTransition: true,
+          child: 'Open',
+        ),
+      ),
+    );
+    await pumpAutoWidthMeasurement(tester);
+    await pumpTextTransitionFrames(tester);
+
+    final midText = tester
+        .widget<Text>(
+          find.byKey(const ValueKey<String>('aws-btn-content-text')),
+        )
+        .data!;
+    expect(midText, isNot('Open analytics dashboard'));
+    expect(tester.getSize(shellFinderFor(buttonKey)).width, longWidth);
+
+    await tester.pump(const Duration(milliseconds: 50));
+    expect(tester.getSize(shellFinderFor(buttonKey)).width, longWidth);
+
+    await tester.pump(const Duration(milliseconds: 16));
+    expect(
+        tester.getSize(shellFinderFor(buttonKey)).width, lessThan(longWidth));
+  });
+
+  testWidgets('auto-width measurement is not capped by constrained rows', (
+    tester,
+  ) async {
+    const buttonKey = Key('row-auto-width-button');
+
+    Widget row(String label) {
+      return MaterialApp(
+        home: Scaffold(
+          body: Center(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                AwesomeButton(
+                  key: buttonKey,
+                  textTransition: true,
+                  child: label,
+                ),
+                const SizedBox(width: 24),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    await tester.pumpWidget(row('Open'));
+    await pumpAutoWidthMeasurement(tester);
+    final shortWidth = tester.getSize(shellFinderFor(buttonKey)).width;
+
+    await tester.pumpWidget(row('Open analytics dashboard'));
+    await pumpAutoWidthMeasurement(tester);
+    await tester.pumpAndSettle();
+
+    expect(tester.getSize(shellFinderFor(buttonKey)).width,
+        greaterThan(shortWidth));
   });
 
   testWidgets('default buttons resolve a neutral translucent shadow plane', (
@@ -777,6 +1055,45 @@ void main() {
   });
 
   testWidgets(
+      'string labels stay single-line clipped during text transition frames', (
+    tester,
+  ) async {
+    const buttonKey = Key('single-line-transition-button');
+
+    await tester.pumpWidget(
+      wrapForTest(
+        const AwesomeButton(
+          key: buttonKey,
+          width: 150,
+          textTransition: true,
+          child: 'Open',
+        ),
+      ),
+    );
+
+    await tester.pumpWidget(
+      wrapForTest(
+        const AwesomeButton(
+          key: buttonKey,
+          width: 150,
+          textTransition: true,
+          child: 'Open analytics dashboard',
+        ),
+      ),
+    );
+
+    await pumpTextTransitionFrames(tester, count: 3);
+
+    final text = tester.widget<Text>(
+      find.byKey(const ValueKey<String>('aws-btn-content-text')),
+    );
+
+    expect(text.maxLines, 1);
+    expect(text.softWrap, false);
+    expect(text.overflow, TextOverflow.clip);
+  });
+
+  testWidgets(
       'swaps immediately when textTransition is disabled or child is non-string, empty, or null',
       (
     tester,
@@ -811,6 +1128,7 @@ void main() {
     await tester.pumpWidget(
       wrapForTest(
         const AwesomeButton(
+          width: 200,
           child: 'Ready#3',
         ),
       ),
@@ -1121,6 +1439,7 @@ void main() {
     expect(progressFillFinderFor(buttonKey), findsOneWidget);
     Key? childKey(Widget child) {
       return switch (child) {
+        final Positioned positionedChild => childKey(positionedChild.child),
         final IgnorePointer pointerChild => pointerChild.child?.key,
         _ => child.key,
       };
