@@ -247,6 +247,7 @@ class _AwesomeButtonState extends State<AwesomeButton>
   Object? _textMetricSignature;
   Object? _scheduledTextMeasurementKey;
   Object? _scheduledTargetRemeasureKey;
+  Object? _scheduledTargetCommitKey;
 
   @override
   void initState() {
@@ -323,6 +324,7 @@ class _AwesomeButtonState extends State<AwesomeButton>
   void dispose() {
     _scheduledTextMeasurementKey = null;
     _scheduledTargetRemeasureKey = null;
+    _scheduledTargetCommitKey = null;
     _sizeTextOwner.removeListener(_handleSizeTextChanged);
     _progressOwner.removeListener(_handleProgressChanged);
     _interactionOwner.removeListener(_handleInteractionChanged);
@@ -675,7 +677,8 @@ class _AwesomeButtonState extends State<AwesomeButton>
       measurement.requiredWidth.toStringAsFixed(3),
       measurement.displayedRequiredWidth.toStringAsFixed(3),
       measurement.availableWidth.toStringAsFixed(3),
-      measurement.constrained,
+      measurement.fits,
+      measurement.externallyConstrained,
       _auxiliaryMeasurementRevision,
     );
     if (_scheduledTextMeasurementKey == key) {
@@ -690,6 +693,30 @@ class _AwesomeButtonState extends State<AwesomeButton>
       }
       _scheduledTextMeasurementKey = null;
       _sizeTextOwner.handleMeasurement(measurement);
+    });
+  }
+
+  void _scheduleTargetCommitProof(_TargetCommitProof proof) {
+    final key = Object.hash(
+      proof.runId,
+      proof.publicationId,
+      proof.metricRevision,
+      proof.text,
+      proof.requiredWidth.toStringAsFixed(3),
+      proof.availableWidth.toStringAsFixed(3),
+      proof.fits,
+      proof.externallyConstrained,
+    );
+    if (_scheduledTargetCommitKey == key) {
+      return;
+    }
+    _scheduledTargetCommitKey = key;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _scheduledTargetCommitKey != key) {
+        return;
+      }
+      _scheduledTargetCommitKey = null;
+      _sizeTextOwner.handleTargetCommitProof(proof);
     });
   }
 
@@ -777,6 +804,7 @@ class _AwesomeButtonState extends State<AwesomeButton>
             final sizePresentation = _sizeTextOwner.presentation;
             return LayoutBuilder(
               builder: (context, constraints) {
+                final devicePixelRatio = View.of(context).devicePixelRatio;
                 final labelTextStyle =
                     _resolvedButtonLabelTextStyle(context, resolvedStyle);
                 final auxiliary = _auxiliaryMeasurement;
@@ -784,16 +812,19 @@ class _AwesomeButtonState extends State<AwesomeButton>
                 final displayedRequiredWidth = auxiliary != null &&
                         displayedText != null &&
                         displayedText.isNotEmpty
-                    ? _measureButtonLabelOuterWidth(
-                        context: context,
-                        text: displayedText,
-                        textStyle: labelTextStyle,
-                        padding: _contentPadding,
-                        borderWidth: resolvedStyle.borderWidth,
-                        contentGap: resolvedStyle.contentGap,
-                        hasBefore: widget.before != null,
-                        hasAfter: widget.after != null,
-                        auxiliary: auxiliary,
+                    ? _roundRequiredWidthToPhysicalPixel(
+                        _measureButtonLabelOuterWidth(
+                          context: context,
+                          text: displayedText,
+                          textStyle: labelTextStyle,
+                          padding: _contentPadding,
+                          borderWidth: resolvedStyle.borderWidth,
+                          contentGap: resolvedStyle.contentGap,
+                          hasBefore: widget.before != null,
+                          hasAfter: widget.after != null,
+                          auxiliary: auxiliary,
+                        ),
+                        devicePixelRatio,
                       )
                     : null;
                 final textScale = MediaQuery.textScalerOf(context).scale(1);
@@ -844,7 +875,7 @@ class _AwesomeButtonState extends State<AwesomeButton>
                   auxiliary,
                   constraints.minWidth,
                   constraints.maxWidth,
-                  availableWidth.toStringAsFixed(3),
+                  devicePixelRatio,
                 ]);
                 if (_textMetricSignature != metricSignature) {
                   _textMetricSignature = metricSignature;
@@ -852,17 +883,33 @@ class _AwesomeButtonState extends State<AwesomeButton>
                 }
                 final measurementRequest = sizePresentation.measurementRequest;
                 if (measurementRequest != null && auxiliary != null) {
-                  final requiredWidth = _measureButtonLabelOuterWidth(
-                    context: context,
-                    text: measurementRequest.text,
-                    textStyle: labelTextStyle,
-                    padding: _contentPadding,
-                    borderWidth: resolvedStyle.borderWidth,
-                    contentGap: resolvedStyle.contentGap,
-                    hasBefore: widget.before != null,
-                    hasAfter: widget.after != null,
-                    auxiliary: auxiliary,
+                  final requiredWidth = _roundRequiredWidthToPhysicalPixel(
+                    _measureButtonLabelOuterWidth(
+                      context: context,
+                      text: measurementRequest.text,
+                      textStyle: labelTextStyle,
+                      padding: _contentPadding,
+                      borderWidth: resolvedStyle.borderWidth,
+                      contentGap: resolvedStyle.contentGap,
+                      hasBefore: widget.before != null,
+                      hasAfter: widget.after != null,
+                      auxiliary: auxiliary,
+                    ),
+                    devicePixelRatio,
                   );
+                  final fits = _hasPhysicalPixelFit(
+                    requiredWidth,
+                    availableWidth,
+                    devicePixelRatio,
+                  );
+                  final externallyConstrained =
+                      sizePresentation.widthMode != _ButtonWidthMode.auto ||
+                          (constraints.hasBoundedWidth &&
+                              !_hasPhysicalPixelFit(
+                                requiredWidth,
+                                constraints.maxWidth,
+                                devicePixelRatio,
+                              ));
                   _scheduleTextMeasurement(
                     _AutoWidthMeasurement(
                       runId: measurementRequest.runId,
@@ -874,12 +921,45 @@ class _AwesomeButtonState extends State<AwesomeButton>
                       displayedRequiredWidth:
                           displayedRequiredWidth ?? requiredWidth,
                       availableWidth: availableWidth,
-                      constrained: requiredWidth >
-                          availableWidth + _textTransitionFitTolerance,
+                      fits: fits,
+                      externallyConstrained: externallyConstrained,
                     ),
                   );
-                } else if (sizePresentation.widthMode ==
-                        _ButtonWidthMode.auto &&
+                }
+                final publicationId = sizePresentation.targetPublicationId;
+                final publicationRunId =
+                    sizePresentation.targetPublicationRunId;
+                if (publicationId != null &&
+                    publicationRunId != null &&
+                    displayedText == widget.child &&
+                    displayedRequiredWidth != null) {
+                  final fits = _hasPhysicalPixelFit(
+                    displayedRequiredWidth,
+                    availableWidth,
+                    devicePixelRatio,
+                  );
+                  final externallyConstrained =
+                      sizePresentation.widthMode != _ButtonWidthMode.auto ||
+                          (constraints.hasBoundedWidth &&
+                              !_hasPhysicalPixelFit(
+                                displayedRequiredWidth,
+                                constraints.maxWidth,
+                                devicePixelRatio,
+                              ));
+                  _scheduleTargetCommitProof(
+                    _TargetCommitProof(
+                      runId: publicationRunId,
+                      publicationId: publicationId,
+                      metricRevision: _textMetricRevision,
+                      text: displayedText!,
+                      requiredWidth: displayedRequiredWidth,
+                      availableWidth: availableWidth,
+                      fits: fits,
+                      externallyConstrained: externallyConstrained,
+                    ),
+                  );
+                } else if (measurementRequest == null &&
+                    sizePresentation.widthMode == _ButtonWidthMode.auto &&
                     !sizePresentation.transientTextFrame &&
                     displayedText == widget.child &&
                     displayedRequiredWidth != null &&

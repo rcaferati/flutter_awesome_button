@@ -31,7 +31,8 @@ class _AutoWidthMeasurement {
     required this.requiredWidth,
     required this.displayedRequiredWidth,
     required this.availableWidth,
-    required this.constrained,
+    required this.fits,
+    required this.externallyConstrained,
   });
 
   final int runId;
@@ -42,8 +43,56 @@ class _AutoWidthMeasurement {
   final double requiredWidth;
   final double displayedRequiredWidth;
   final double availableWidth;
-  final bool constrained;
+  final bool fits;
+  final bool externallyConstrained;
 }
+
+@immutable
+class _TargetCommitProof {
+  const _TargetCommitProof({
+    required this.runId,
+    required this.publicationId,
+    required this.metricRevision,
+    required this.text,
+    required this.requiredWidth,
+    required this.availableWidth,
+    required this.fits,
+    required this.externallyConstrained,
+  });
+
+  final int runId;
+  final int publicationId;
+  final int metricRevision;
+  final String text;
+  final double requiredWidth;
+  final double availableWidth;
+  final bool fits;
+  final bool externallyConstrained;
+}
+
+double _roundRequiredWidthToPhysicalPixel(double width, double scale) {
+  if (!width.isFinite) {
+    return width;
+  }
+  final safeScale = scale.isFinite && scale > 0 ? scale : 1.0;
+  return (width * safeScale).ceilToDouble() / safeScale;
+}
+
+double _roundAvailableWidthToPhysicalPixel(double width, double scale) {
+  if (!width.isFinite) {
+    return width;
+  }
+  final safeScale = scale.isFinite && scale > 0 ? scale : 1.0;
+  return (width * safeScale).floorToDouble() / safeScale;
+}
+
+bool _hasPhysicalPixelFit(
+  double requiredWidth,
+  double availableWidth,
+  double scale,
+) =>
+    _roundAvailableWidthToPhysicalPixel(availableWidth, scale) >=
+    _roundRequiredWidthToPhysicalPixel(requiredWidth, scale);
 
 @immutable
 class _ButtonAuxiliaryMeasurement {

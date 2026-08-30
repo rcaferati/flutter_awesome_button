@@ -92,8 +92,10 @@ widgets.
 - transient labels are always a single clipped line. Fixed, stretch, and
   externally constrained layouts use clipping as a safety fallback; stable
   labels regain normal wrapping and accessibility scaling after settlement
-- when `textTransition` is disabled, the target label updates immediately even
-  if `animateSize` continues animating its geometry
+- when `textTransition` is disabled, wider labels keep the fitting source until
+  the target fits; the target stays clipped to one line until a matching
+  post-layout proof confirms physical-pixel fit, while narrower labels swap
+  before width shrinks
 - `animateSize: false` keeps size changes instant
 - fixed-to-auto and auto-to-fixed changes remain instant
 

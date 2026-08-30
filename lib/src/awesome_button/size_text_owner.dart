@@ -49,6 +49,8 @@ class _AwesomeButtonSizeTextPresentation {
     required this.measurementRequest,
     required this.transientTextFrame,
     required this.alignTextLogicalLeading,
+    required this.targetPublicationId,
+    required this.targetPublicationRunId,
   });
 
   final _ButtonWidthMode widthMode;
@@ -58,6 +60,27 @@ class _AwesomeButtonSizeTextPresentation {
   final _AutoWidthMeasurementRequest? measurementRequest;
   final bool transientTextFrame;
   final bool alignTextLogicalLeading;
+  final int? targetPublicationId;
+  final int? targetPublicationRunId;
+}
+
+class _PendingTargetCommit {
+  _PendingTargetCommit({
+    required this.runId,
+    required this.publicationId,
+    required this.metricRevision,
+    required this.text,
+    required this.requiredWidth,
+  });
+
+  final int runId;
+  final int publicationId;
+  int metricRevision;
+  final String text;
+  double requiredWidth;
+  bool nativeCommitted = false;
+  bool fits = false;
+  bool externallyConstrained = false;
 }
 
 class _AwesomeButtonSizeTextOwner extends ChangeNotifier {
@@ -98,6 +121,7 @@ class _AwesomeButtonSizeTextOwner extends ChangeNotifier {
   TextTransitionController? _textTransitionController;
   String? _displayedText;
   String? _currentTextTarget;
+  String? _transitionSourceText;
   _ButtonWidthMode _widthMode;
   _AutoWidthTextFlow _activeFlow = _AutoWidthTextFlow.initial;
   TextTransitionTimeline? _activeTimeline;
@@ -117,12 +141,15 @@ class _AwesomeButtonSizeTextOwner extends ChangeNotifier {
   bool _widthPhaseComplete = true;
   bool _growthTextGatePending = false;
   bool _shrinkWidthGatePending = false;
+  bool _atomicGrowthHandoffPending = false;
   bool _transientTextFrame = false;
   int _widthAnimationToken = 0;
   int _heightAnimationToken = 0;
   int _sizeRunId = 0;
   int _measurementSequence = 0;
+  int _publicationSequence = 0;
   _AutoWidthMeasurementRequest? _measurementRequest;
+  _PendingTargetCommit? _pendingTargetCommit;
   bool _disposed = false;
 
   _AwesomeButtonSizeTextPresentation get presentation =>
@@ -135,6 +162,8 @@ class _AwesomeButtonSizeTextOwner extends ChangeNotifier {
         transientTextFrame: _transientTextFrame,
         alignTextLogicalLeading:
             _transitionStarted && _activeFlow == _AutoWidthTextFlow.shrinkLast,
+        targetPublicationId: _pendingTargetCommit?.publicationId,
+        targetPublicationRunId: _pendingTargetCommit?.runId,
       );
 
   double? get _nominalCurrentWidth {
@@ -282,6 +311,34 @@ class _AwesomeButtonSizeTextOwner extends ChangeNotifier {
     }
   }
 
+  void handleTargetCommitProof(_TargetCommitProof proof) {
+    final pending = _pendingTargetCommit;
+    if (_disposed ||
+        pending == null ||
+        pending.runId != proof.runId ||
+        pending.publicationId != proof.publicationId ||
+        pending.text != proof.text ||
+        proof.metricRevision < pending.metricRevision ||
+        proof.runId != _sizeRunId) {
+      return;
+    }
+    pending
+      ..metricRevision = proof.metricRevision
+      ..requiredWidth = proof.requiredWidth;
+    if (_widthMode == _ButtonWidthMode.auto &&
+        (_targetMeasuredWidth == null ||
+            (_targetMeasuredWidth! - proof.requiredWidth).abs() >=
+                _textTransitionFitTolerance)) {
+      _retargetActiveWidth(proof.requiredWidth);
+    }
+    pending
+      ..nativeCommitted = true
+      ..fits = proof.fits
+      ..externallyConstrained = proof.externallyConstrained;
+    _trySettleTargetCommit();
+    _notifyChanged();
+  }
+
   void _handleTargetMeasurement(_AutoWidthMeasurement measurement) {
     final targetWidth = measurement.requiredWidth;
     _targetMeasuredWidth = targetWidth;
@@ -316,7 +373,11 @@ class _AwesomeButtonSizeTextOwner extends ChangeNotifier {
     }
 
     if (!_shouldAnimateText(displayed, targetText)) {
-      _settleWithoutTextTransition(targetText, targetWidth);
+      _settleWithoutTextTransition(
+        targetText,
+        measurement.displayedRequiredWidth,
+        measurement,
+      );
       return;
     }
     _startMeasuredTransition(
@@ -330,28 +391,76 @@ class _AwesomeButtonSizeTextOwner extends ChangeNotifier {
     if (!_transitionStarted) {
       return;
     }
+    if (_atomicGrowthHandoffPending) {
+      if (!measurement.fits && !measurement.externallyConstrained) {
+        _notifyChanged();
+        return;
+      }
+      _atomicGrowthHandoffPending = false;
+      _displayedText = measurement.text;
+      _displayedFrameWidth = measurement.requiredWidth;
+      _publishTargetCommit(measurement);
+      _notifyChanged();
+      return;
+    }
     final isFinalTarget =
         _textEngineComplete && measurement.text == _currentTextTarget;
+    if (isFinalTarget &&
+        _widthMode == _ButtonWidthMode.auto &&
+        (_targetMeasuredWidth == null ||
+            (_targetMeasuredWidth! - measurement.requiredWidth).abs() >=
+                _textTransitionFitTolerance)) {
+      _retargetActiveWidth(measurement.requiredWidth);
+      _requestMeasurement(_TextMeasurementKind.candidate, measurement.text);
+      return;
+    }
     final requiresFit = _widthMode == _ButtonWidthMode.auto &&
         (_activeFlow == _AutoWidthTextFlow.growFirst ||
-            _activeFlow == _AutoWidthTextFlow.textOnly) &&
-        !isFinalTarget;
+            _activeFlow == _AutoWidthTextFlow.textOnly);
     if (requiresFit &&
-        measurement.requiredWidth >
-            measurement.availableWidth + _textTransitionFitTolerance) {
+        !measurement.fits &&
+        !measurement.externallyConstrained) {
       _notifyChanged();
       return;
     }
 
     _displayedText = measurement.text;
     _displayedFrameWidth = measurement.requiredWidth;
-    _transientTextFrame = measurement.text != _currentTextTarget;
     if (isFinalTarget) {
-      _textPhaseComplete = true;
-      _transientTextFrame = false;
+      _publishTargetCommit(measurement);
+    } else {
+      _transientTextFrame = true;
     }
     _finishTransitionIfSettled();
     _notifyChanged();
+  }
+
+  void _publishTargetCommit(_AutoWidthMeasurement measurement) {
+    _publicationSequence += 1;
+    _pendingTargetCommit = _PendingTargetCommit(
+      runId: measurement.runId,
+      publicationId: _publicationSequence,
+      metricRevision: measurement.metricRevision,
+      text: measurement.text,
+      requiredWidth: measurement.requiredWidth,
+    );
+    _textPhaseComplete = false;
+    _transientTextFrame = true;
+  }
+
+  void _trySettleTargetCommit() {
+    final pending = _pendingTargetCommit;
+    if (pending == null || !pending.nativeCommitted) {
+      return;
+    }
+    if (!pending.fits &&
+        !(pending.externallyConstrained && _widthPhaseComplete)) {
+      return;
+    }
+    _pendingTargetCommit = null;
+    _textPhaseComplete = true;
+    _transientTextFrame = false;
+    _finishTransitionIfSettled();
   }
 
   bool _shouldAnimateText(String? source, String target) {
@@ -363,17 +472,68 @@ class _AwesomeButtonSizeTextOwner extends ChangeNotifier {
         source != target;
   }
 
-  void _settleWithoutTextTransition(String targetText, double targetWidth) {
-    _displayedText = targetText;
-    _displayedFrameWidth = targetWidth;
-    if (_widthMode == _ButtonWidthMode.auto) {
-      if (currentWidth == null) {
+  void _settleWithoutTextTransition(
+    String targetText,
+    double sourceWidth,
+    _AutoWidthMeasurement measurement,
+  ) {
+    final targetWidth = measurement.requiredWidth;
+    final flow = _autoWidthTextFlow(sourceWidth, targetWidth);
+    _targetMeasuredWidth = targetWidth;
+
+    if (_widthMode != _ButtonWidthMode.auto ||
+        !_configuration.animateSize ||
+        _configuration.reduceMotion ||
+        flow == _AutoWidthTextFlow.initial) {
+      if (_widthMode == _ButtonWidthMode.auto) {
         _setWidthImmediately(targetWidth);
-      } else {
-        _animateWidthTo(targetWidth);
       }
+      _displayedText = targetText;
+      _displayedFrameWidth = targetWidth;
+      _transientTextFrame = false;
+      _notifyChanged();
+      return;
     }
-    _notifyChanged();
+
+    _activeFlow = flow;
+    _transitionSourceText = _displayedText;
+    _transitionStarted = true;
+    _textEngineComplete = true;
+    _textPhaseComplete = false;
+    _widthPhaseComplete = flow == _AutoWidthTextFlow.textOnly;
+    _atomicGrowthHandoffPending = flow == _AutoWidthTextFlow.growFirst;
+    _displayedFrameWidth = sourceWidth;
+    _transientTextFrame = true;
+
+    if (flow == _AutoWidthTextFlow.textOnly) {
+      if (targetWidth > sourceWidth) {
+        _setWidthImmediately(targetWidth);
+      }
+      _displayedText = targetText;
+      _displayedFrameWidth = targetWidth;
+      _publishTargetCommit(measurement);
+      _notifyChanged();
+      return;
+    }
+
+    if (flow == _AutoWidthTextFlow.shrinkLast) {
+      _displayedText = targetText;
+      _displayedFrameWidth = targetWidth;
+      _publishTargetCommit(measurement);
+      _animateWidthTo(
+        targetWidth,
+        onComplete: _markWidthPhaseComplete,
+      );
+      _notifyChanged();
+      return;
+    }
+
+    _widthPhaseComplete = false;
+    _requestMeasurement(_TextMeasurementKind.candidate, targetText);
+    _animateWidthTo(
+      targetWidth,
+      onComplete: _markWidthPhaseComplete,
+    );
   }
 
   void _startMeasuredTransition(
@@ -382,6 +542,7 @@ class _AwesomeButtonSizeTextOwner extends ChangeNotifier {
     double targetWidth,
   ) {
     final sourceText = _displayedText!;
+    _transitionSourceText = sourceText;
     _activeTimeline = getTextTransitionTimeline(sourceText, targetText);
     _activeFlow = _autoWidthTextFlow(sourceWidth, targetWidth);
     _displayedFrameWidth = sourceWidth;
@@ -479,8 +640,17 @@ class _AwesomeButtonSizeTextOwner extends ChangeNotifier {
   }
 
   void _handleWidthTick() {
-    if (_disposed ||
-        !_growthTextGatePending ||
+    if (_disposed) {
+      return;
+    }
+    if (_atomicGrowthHandoffPending && _measurementRequest == null) {
+      final target = _currentTextTarget;
+      if (target != null && target.isNotEmpty) {
+        _requestMeasurement(_TextMeasurementKind.candidate, target);
+      }
+    }
+    _requestPendingFinalTargetIfNeeded();
+    if (!_growthTextGatePending ||
         !_isWidthAnimating ||
         widthController.value < _textTransitionPhaseLead) {
       return;
@@ -498,19 +668,47 @@ class _AwesomeButtonSizeTextOwner extends ChangeNotifier {
       return;
     }
     _widthPhaseComplete = true;
+    if (_atomicGrowthHandoffPending && _measurementRequest == null) {
+      final target = _currentTextTarget;
+      if (target != null && target.isNotEmpty) {
+        _requestMeasurement(_TextMeasurementKind.candidate, target);
+      }
+    }
+    _requestPendingFinalTargetIfNeeded();
+    _trySettleTargetCommit();
     _finishTransitionIfSettled();
     _notifyChanged();
   }
 
+  void _requestPendingFinalTargetIfNeeded() {
+    if (!_transitionStarted ||
+        !_textEngineComplete ||
+        _textPhaseComplete ||
+        _atomicGrowthHandoffPending ||
+        _pendingTargetCommit != null ||
+        _measurementRequest != null) {
+      return;
+    }
+    final target = _currentTextTarget;
+    if (target != null && target.isNotEmpty) {
+      _requestMeasurement(_TextMeasurementKind.candidate, target);
+    }
+  }
+
   void _finishTransitionIfSettled() {
-    if (!_transitionStarted || !_textPhaseComplete || !_widthPhaseComplete) {
+    if (!_transitionStarted ||
+        !_textPhaseComplete ||
+        !_widthPhaseComplete ||
+        _pendingTargetCommit != null) {
       return;
     }
     _transitionStarted = false;
     _activeFlow = _AutoWidthTextFlow.initial;
     _activeTimeline = null;
+    _transitionSourceText = null;
     _growthTextGatePending = false;
     _shrinkWidthGatePending = false;
+    _atomicGrowthHandoffPending = false;
     _transientTextFrame = false;
     _displayedFrameWidth = _targetMeasuredWidth;
     if (_widthMode == _ButtonWidthMode.auto && _targetMeasuredWidth != null) {
@@ -561,12 +759,24 @@ class _AwesomeButtonSizeTextOwner extends ChangeNotifier {
     if (nextText == _currentTextTarget &&
         !(_widthMode == _ButtonWidthMode.auto && _resolvedWidth == null)) {
       if (!_configuration.textTransition && _transitionStarted) {
+        final replacementFrame = _activeFlow == _AutoWidthTextFlow.growFirst
+            ? (_transitionSourceText ?? _displayedText)
+            : nextText;
         _invalidateTextRun(preserveTarget: true);
-        _displayedText = nextText;
-        _transientTextFrame = false;
-        if (nextText != null && nextText.isNotEmpty) {
+        _displayedText = replacementFrame;
+        final requiresMeasuredAutoHandoff =
+            _widthMode == _ButtonWidthMode.auto &&
+                nextText != null &&
+                nextText.isNotEmpty &&
+                _displayedText != null &&
+                _displayedText!.isNotEmpty &&
+                _displayedText != nextText;
+        if (requiresMeasuredAutoHandoff) {
+          _transientTextFrame = true;
           _requestMeasurement(_TextMeasurementKind.target, nextText);
         } else {
+          _displayedText = nextText;
+          _transientTextFrame = false;
           _notifyChanged();
         }
       }
@@ -586,7 +796,14 @@ class _AwesomeButtonSizeTextOwner extends ChangeNotifier {
       return;
     }
 
-    if (!_configuration.textTransition ||
+    final requiresMeasuredAutoHandoff = _widthMode == _ButtonWidthMode.auto &&
+        _displayedText != null &&
+        _displayedText!.isNotEmpty &&
+        _displayedText != nextText;
+    if ((!_configuration.textTransition || _configuration.reduceMotion) &&
+        requiresMeasuredAutoHandoff) {
+      _transientTextFrame = true;
+    } else if (!_configuration.textTransition ||
         _configuration.reduceMotion ||
         _displayedText == null ||
         _displayedText!.isEmpty ||
@@ -603,6 +820,7 @@ class _AwesomeButtonSizeTextOwner extends ChangeNotifier {
     final interruptedWidth = currentWidth;
     _sizeRunId += 1;
     _measurementRequest = null;
+    _pendingTargetCommit = null;
     _textTransitionController?.stop();
     _textTransitionController = null;
     _transitionStarted = false;
@@ -611,8 +829,10 @@ class _AwesomeButtonSizeTextOwner extends ChangeNotifier {
     _widthPhaseComplete = true;
     _growthTextGatePending = false;
     _shrinkWidthGatePending = false;
+    _atomicGrowthHandoffPending = false;
     _activeFlow = _AutoWidthTextFlow.initial;
     _activeTimeline = null;
+    _transitionSourceText = null;
     _transientTextFrame = _displayedText != _currentTextTarget;
     _widthAnimationToken += 1;
     widthController.stop();

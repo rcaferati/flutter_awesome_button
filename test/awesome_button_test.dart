@@ -510,6 +510,7 @@ void main() {
     tester,
   ) async {
     const buttonKey = Key('auto-width-size-button');
+    final semantics = tester.ensureSemantics();
 
     await tester.pumpWidget(
       wrapForTest(
@@ -538,9 +539,26 @@ void main() {
             find.byKey(const ValueKey<String>('aws-btn-content-text')),
           )
           .data,
+      'Open',
+    );
+    expect(
+      tester.getSemantics(find.byKey(buttonKey)).label,
       'Open analytics dashboard',
     );
     await pumpAutoWidthMeasurement(tester);
+
+    var pendingText = tester.widget<Text>(
+      find.byKey(const ValueKey<String>('aws-btn-content-text')),
+    );
+    expect(pendingText.data, 'Open');
+    expect(pendingText.maxLines, 1);
+    expect(pendingText.softWrap, isFalse);
+
+    await tester.pump(const Duration(milliseconds: 80));
+    pendingText = tester.widget<Text>(
+      find.byKey(const ValueKey<String>('aws-btn-content-text')),
+    );
+    expect(pendingText.data, 'Open');
 
     await tester.pumpAndSettle();
 
@@ -554,6 +572,14 @@ void main() {
           .data,
       'Open analytics dashboard',
     );
+    expect(
+      tester
+          .widget<Text>(
+            find.byKey(const ValueKey<String>('aws-btn-content-text')),
+          )
+          .maxLines,
+      isNull,
+    );
 
     await tester.pumpWidget(
       wrapForTest(
@@ -563,7 +589,7 @@ void main() {
         ),
       ),
     );
-    await pumpAutoWidthMeasurement(tester);
+    await tester.pump();
 
     expect(
       tester
@@ -573,9 +599,172 @@ void main() {
           .data,
       'Open',
     );
+    final shrinkingTarget = tester.widget<Text>(
+      find.byKey(const ValueKey<String>('aws-btn-content-text')),
+    );
+    expect(shrinkingTarget.maxLines, 1);
+    expect(shrinkingTarget.softWrap, isFalse);
+    expect(shrinkingTarget.overflow, TextOverflow.clip);
 
     await tester.pumpAndSettle();
     expect(tester.getSize(shellFinderFor(buttonKey)).width, shortWidth);
+    semantics.dispose();
+  });
+
+  testWidgets(
+      'final target stays single-line through physical-pixel commit proof', (
+    tester,
+  ) async {
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.resetDevicePixelRatio);
+    const buttonKey = Key('physical-pixel-target-commit-button');
+
+    Widget build(String label) => wrapForTest(
+          AwesomeButton(
+            key: buttonKey,
+            style: const AwesomeButtonStyle(textFontFamily: 'Ahem'),
+            child: label,
+          ),
+        );
+
+    await tester.pumpWidget(build('Open'));
+    await pumpAutoWidthMeasurement(tester);
+    await tester.pumpWidget(build('Open analytics dashboard'));
+    await pumpAutoWidthMeasurement(tester);
+
+    Text? publishedTarget;
+    for (var frame = 0; frame < 30; frame += 1) {
+      await tester.pump(const Duration(milliseconds: 16));
+      final text = tester.widget<Text>(
+        find.byKey(const ValueKey<String>('aws-btn-content-text')),
+      );
+      if (text.data == 'Open analytics dashboard') {
+        publishedTarget = text;
+        break;
+      }
+    }
+
+    expect(publishedTarget, isNotNull);
+    expect(publishedTarget!.maxLines, 1);
+    expect(publishedTarget.softWrap, isFalse);
+    expect(publishedTarget.overflow, TextOverflow.clip);
+    final requiredWidth = requiredOuterWidthForVisibleText(
+      tester,
+      horizontalPadding: 16,
+      borderWidth: 0,
+    );
+    final availableWidth = tester.getSize(shellFinderFor(buttonKey)).width;
+    expect(
+      (availableWidth * 3).floor(),
+      greaterThanOrEqualTo((requiredWidth * 3).ceil()),
+    );
+
+    await tester.pump();
+    final stableTarget = tester.widget<Text>(
+      find.byKey(const ValueKey<String>('aws-btn-content-text')),
+    );
+    expect(stableTarget.data, 'Open analytics dashboard');
+    expect(stableTarget.maxLines, isNull);
+    expect(stableTarget.softWrap, isTrue);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('auto-width growth suppresses stale non-transition handoffs', (
+    tester,
+  ) async {
+    const buttonKey = Key('auto-width-stale-handoff-button');
+
+    Future<void> show(String label) => tester.pumpWidget(
+          wrapForTest(
+            AwesomeButton(
+              key: buttonKey,
+              child: label,
+            ),
+          ),
+        );
+
+    await show('Open');
+    await pumpAutoWidthMeasurement(tester);
+    await show('Open analytics dashboard');
+    await pumpAutoWidthMeasurement(tester);
+    expect(
+      tester
+          .widget<Text>(
+            find.byKey(const ValueKey<String>('aws-btn-content-text')),
+          )
+          .data,
+      'Open',
+    );
+
+    await tester.pump(const Duration(milliseconds: 48));
+    await show('Save report');
+    await pumpAutoWidthMeasurement(tester);
+    await tester.pumpAndSettle();
+
+    expect(
+      tester
+          .widget<Text>(
+            find.byKey(const ValueKey<String>('aws-btn-content-text')),
+          )
+          .data,
+      'Save report',
+    );
+  });
+
+  testWidgets('rapid non-transition replacements never expose under-width wrap',
+      (
+    tester,
+  ) async {
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.resetDevicePixelRatio);
+    const buttonKey = Key('rapid-atomic-label-button');
+
+    Widget build(String label) => wrapForTest(
+          AwesomeButton(
+            key: buttonKey,
+            style: const AwesomeButtonStyle(textFontFamily: 'Ahem'),
+            child: label,
+          ),
+        );
+
+    await tester.pumpWidget(build('Open'));
+    await pumpAutoWidthMeasurement(tester);
+
+    for (final target in <String>[
+      'Open analytics dashboard',
+      'Go',
+      'Open reports and account settings',
+      'Save',
+    ]) {
+      await tester.pumpWidget(build(target));
+      for (var frame = 0; frame < 4; frame += 1) {
+        await tester.pump(const Duration(milliseconds: 16));
+        final text = tester.widget<Text>(
+          find.byKey(const ValueKey<String>('aws-btn-content-text')),
+        );
+        final requiredWidth = requiredOuterWidthForVisibleText(
+          tester,
+          horizontalPadding: 16,
+          borderWidth: 0,
+        );
+        final availableWidth = tester.getSize(shellFinderFor(buttonKey)).width;
+        final physicallyFits =
+            (availableWidth * 3).floor() >= (requiredWidth * 3).ceil();
+        if (!physicallyFits) {
+          expect(text.maxLines, 1);
+          expect(text.softWrap, isFalse);
+          expect(text.overflow, TextOverflow.clip);
+        }
+      }
+    }
+
+    await tester.pumpAndSettle();
+    final finalText = tester.widget<Text>(
+      find.byKey(const ValueKey<String>('aws-btn-content-text')),
+    );
+    expect(finalText.data, 'Save');
+    expect(finalText.maxLines, isNull);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('auto-width growth leads text by 30 percent of the text duration',
@@ -1175,6 +1364,14 @@ void main() {
     expect(tester.getSize(shellFinderFor(buttonKey)).width, 140);
     expect(tester.getSize(faceFinderFor(buttonKey)).height, faceHeight);
     expect(tester.takeException(), isNull);
+
+    await tester.pumpAndSettle();
+    final stableText = tester.widget<Text>(
+      find.byKey(const ValueKey<String>('aws-btn-content-text')),
+    );
+    expect(stableText.data, 'View analytics dashboard');
+    expect(stableText.maxLines, isNull);
+    expect(stableText.softWrap, isTrue);
   });
 
   testWidgets('disabling textTransition settles an active target', (
@@ -1206,9 +1403,17 @@ void main() {
     await tester.pumpWidget(
       build('View analytics dashboard', transition: false),
     );
-    await tester.pump();
+    await pumpAutoWidthMeasurement(tester);
 
-    final text = tester.widget<Text>(
+    var text = tester.widget<Text>(
+      find.byKey(const ValueKey<String>('aws-btn-content-text')),
+    );
+    expect(text.data, 'Go');
+    expect(text.maxLines, 1);
+    expect(text.softWrap, isFalse);
+
+    await tester.pumpAndSettle();
+    text = tester.widget<Text>(
       find.byKey(const ValueKey<String>('aws-btn-content-text')),
     );
     expect(text.data, 'View analytics dashboard');
@@ -1907,7 +2112,9 @@ void main() {
     }
 
     await tester.pumpWidget(build('Go'));
+    await pumpAutoWidthMeasurement(tester);
     await tester.pumpWidget(build('View analytics dashboard'));
+    await pumpAutoWidthMeasurement(tester);
 
     final text = tester.widget<Text>(
       find.byKey(const ValueKey<String>('aws-btn-content-text')),
