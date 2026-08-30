@@ -77,13 +77,15 @@ class ThemedButton extends StatefulWidget {
   /// Built-in theme name lookup.
   final ThemeName? name;
 
-  /// Visual variant to resolve from the active theme.
+  /// Visual variant to resolve from the active theme. An explicit flat variant
+  /// remains visually flat while disabled.
   final ButtonVariant type;
 
   /// Size preset to resolve from the active theme.
   final ButtonSize size;
 
-  /// Whether the themed flat variant should override [type].
+  /// Whether the themed flat variant should override [type], including while
+  /// disabled.
   final bool flat;
 
   /// Whether shell, shadow, and border colors should resolve transparent.
@@ -101,7 +103,8 @@ class ThemedButton extends StatefulWidget {
   /// Long-press callback fired after the platform long-press gesture wins.
   final VoidCallback? onLongPress;
 
-  /// Whether the button should ignore interactions and render disabled styles.
+  /// Whether the button should ignore interactions and render the disabled
+  /// variant unless flat styling was requested.
   final bool disabled;
 
   /// Fixed button width override.

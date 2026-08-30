@@ -207,14 +207,30 @@ void main() {
     expect(getTheme(index: -1).name, ThemeName.basic);
   });
 
-  test('themed resolution prioritizes disabled then flat then requested type',
-      () {
+  test('themed resolution preserves flat styling while disabled', () {
     final theme = buildMinimalTheme();
 
     expect(
       resolveButtonType(theme, true, true, ButtonVariant.anchor),
+      ButtonVariant.flat,
+    );
+    expect(
+      resolveButtonType(theme, true, false, ButtonVariant.flat),
+      ButtonVariant.flat,
+    );
+    expect(
+      resolveButtonType(theme, true, false, ButtonVariant.anchor),
       ButtonVariant.disabled,
     );
+    final disabledFlatStyle = theme.buttons[resolveButtonType(
+      theme,
+      true,
+      false,
+      ButtonVariant.flat,
+    )]!;
+    expect(disabledFlatStyle.raiseLevel, 0);
+    expect(disabledFlatStyle.backgroundDarker, Colors.transparent);
+    expect(disabledFlatStyle.backgroundShadow, Colors.transparent);
     expect(
       resolveButtonType(theme, false, true, ButtonVariant.anchor),
       ButtonVariant.flat,

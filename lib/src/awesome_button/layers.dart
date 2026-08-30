@@ -71,7 +71,6 @@ class _ButtonFaceLayer extends StatelessWidget {
     required this.backgroundColor,
     required this.borderColor,
     required this.borderWidth,
-    required this.foregroundColor,
     required this.activeBackgroundColor,
     required this.activeBackgroundOpacity,
     required this.hoverOverlayColor,
@@ -91,9 +90,12 @@ class _ButtonFaceLayer extends StatelessWidget {
     required this.showProgressVisuals,
     required this.showProgressBar,
     required this.animatedPlaceholder,
-    required this.textSize,
+    required this.textStyle,
     required this.textLineHeight,
-    required this.textFontFamily,
+    required this.transientTextFrame,
+    required this.alignTextLogicalLeading,
+    required this.auxiliaryMeasurementRevision,
+    required this.onAuxiliaryMeasured,
   });
 
   final bool stretch;
@@ -103,7 +105,6 @@ class _ButtonFaceLayer extends StatelessWidget {
   final Color backgroundColor;
   final Color borderColor;
   final double borderWidth;
-  final Color foregroundColor;
   final Color activeBackgroundColor;
   final double activeBackgroundOpacity;
   final Color hoverOverlayColor;
@@ -123,9 +124,12 @@ class _ButtonFaceLayer extends StatelessWidget {
   final bool showProgressVisuals;
   final bool showProgressBar;
   final bool animatedPlaceholder;
-  final double textSize;
+  final TextStyle textStyle;
   final double textLineHeight;
-  final String? textFontFamily;
+  final bool transientTextFrame;
+  final bool alignTextLogicalLeading;
+  final int auxiliaryMeasurementRevision;
+  final ValueChanged<_ButtonAuxiliaryMeasurement> onAuxiliaryMeasured;
 
   @override
   Widget build(BuildContext context) {
@@ -140,8 +144,11 @@ class _ButtonFaceLayer extends StatelessWidget {
       final String text => Text(
           displayedText ?? text,
           key: const ValueKey<String>('aws-btn-content-text'),
-          softWrap: true,
-          textAlign: TextAlign.center,
+          maxLines: transientTextFrame ? 1 : null,
+          softWrap: !transientTextFrame,
+          overflow: transientTextFrame ? TextOverflow.clip : null,
+          textAlign:
+              alignTextLogicalLeading ? TextAlign.start : TextAlign.center,
         ),
       final Widget widget => widget,
       _ => const SizedBox.shrink(),
@@ -230,13 +237,15 @@ class _ButtonFaceLayer extends StatelessWidget {
                                   )
                                 : _ButtonContent(
                                     stretch: stretch,
-                                    foregroundColor: foregroundColor,
                                     gap: contentGap,
                                     before: before,
                                     after: after,
-                                    textSize: textSize,
-                                    textLineHeight: textLineHeight,
-                                    textFontFamily: textFontFamily,
+                                    textStyle: textStyle,
+                                    alignLogicalLeading:
+                                        alignTextLogicalLeading,
+                                    auxiliaryMeasurementRevision:
+                                        auxiliaryMeasurementRevision,
+                                    onAuxiliaryMeasured: onAuxiliaryMeasured,
                                     child: renderedChild,
                                   ),
                           ),

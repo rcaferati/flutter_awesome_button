@@ -22,17 +22,19 @@ const ThemeButtonStyle transparentStyles = ThemeButtonStyle(
   borderColor: Colors.transparent,
 );
 
-/// Resolves the effective themed variant, honoring disabled and flat overrides.
+/// Resolves the effective themed variant, preserving requested flat styling
+/// while disabled.
 ButtonVariant resolveButtonType(
   ThemeDefinition theme,
   bool disabled,
   bool flat,
   ButtonVariant type,
 ) {
-  final requestedType = disabled
-      ? ButtonVariant.disabled
-      : flat
-          ? ButtonVariant.flat
+  final flatRequested = flat || type == ButtonVariant.flat;
+  final requestedType = flatRequested
+      ? ButtonVariant.flat
+      : disabled
+          ? ButtonVariant.disabled
           : type;
 
   return theme.buttons.containsKey(requestedType)

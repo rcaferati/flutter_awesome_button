@@ -183,7 +183,12 @@ class AwesomeButton extends StatefulWidget {
   /// Animates fixed-size and auto-width string-label size changes.
   final bool animateSize;
 
-  /// Enables string-only text transition effects between child updates.
+  /// Enables measured, grapheme-aware transitions between non-empty strings.
+  ///
+  /// Transient frames remain on one clipped line and never replace the latest
+  /// target string as the button's accessibility identity. Auto-width frames
+  /// are measured before publication; stable labels regain normal wrapping
+  /// after settlement. Reduced Motion settles text and geometry immediately.
   final bool textTransition;
 
   /// Whether placeholder buttons should animate their shimmer.
@@ -236,10 +241,23 @@ class _AwesomeButtonState extends State<AwesomeButton>
   bool _hovered = false;
   bool _focused = false;
   bool _reduceMotion = false;
+  int _auxiliaryMeasurementRevision = 0;
+  int _textMetricRevision = 0;
+  _ButtonAuxiliaryMeasurement? _auxiliaryMeasurement;
+  Object? _textMetricSignature;
+  Object? _scheduledTextMeasurementKey;
+  Object? _scheduledTargetRemeasureKey;
 
   @override
   void initState() {
     super.initState();
+    if (widget.before == null && widget.after == null) {
+      _auxiliaryMeasurement = const _ButtonAuxiliaryMeasurement(
+        revision: 0,
+        beforeWidth: 0,
+        afterWidth: 0,
+      );
+    }
     _sizeTextOwner = _AwesomeButtonSizeTextOwner(
       vsync: this,
       initialConfiguration: _sizeTextConfigurationFor(widget),
@@ -260,6 +278,16 @@ class _AwesomeButtonState extends State<AwesomeButton>
   @override
   void didUpdateWidget(covariant AwesomeButton oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.before != widget.before || oldWidget.after != widget.after) {
+      _auxiliaryMeasurementRevision += 1;
+      _auxiliaryMeasurement = widget.before == null && widget.after == null
+          ? _ButtonAuxiliaryMeasurement(
+              revision: _auxiliaryMeasurementRevision,
+              beforeWidth: 0,
+              afterWidth: 0,
+            )
+          : null;
+    }
     _progressOwner.updateConfiguration(_progressConfiguration);
     if (oldWidget.onLongPress != null && widget.onLongPress == null) {
       _interactionOwner.disarmLongPress();
@@ -293,6 +321,8 @@ class _AwesomeButtonState extends State<AwesomeButton>
 
   @override
   void dispose() {
+    _scheduledTextMeasurementKey = null;
+    _scheduledTargetRemeasureKey = null;
     _sizeTextOwner.removeListener(_handleSizeTextChanged);
     _progressOwner.removeListener(_handleProgressChanged);
     _interactionOwner.removeListener(_handleInteractionChanged);
@@ -348,29 +378,6 @@ class _AwesomeButtonState extends State<AwesomeButton>
     return _ButtonWidthMode.auto;
   }
 
-  bool _canChoreographAutoWidthTextFor(AwesomeButton widget) {
-    final text = _extractStringChild(widget.child);
-
-    return _widthModeFor(widget) == _ButtonWidthMode.auto &&
-        text != null &&
-        text.isNotEmpty &&
-        widget.before == null &&
-        widget.after == null;
-  }
-
-  String? _autoWidthMeasurementTextFor(AwesomeButton widget) {
-    if (_widthModeFor(widget) != _ButtonWidthMode.auto ||
-        widget.before != null ||
-        widget.after != null) {
-      return null;
-    }
-
-    return switch (widget.child) {
-      final String value when value.isNotEmpty => value,
-      _ => null,
-    };
-  }
-
   _AwesomeButtonSizeTextConfiguration _sizeTextConfigurationFor(
     AwesomeButton candidate,
   ) {
@@ -382,8 +389,6 @@ class _AwesomeButtonState extends State<AwesomeButton>
       textTransition: candidate.textTransition,
       reduceMotion: _reduceMotion,
       stringChild: _extractStringChild(candidate.child),
-      canChoreographAutoWidthText: _canChoreographAutoWidthTextFor(candidate),
-      autoWidthMeasurementText: _autoWidthMeasurementTextFor(candidate),
     );
   }
 
@@ -648,8 +653,58 @@ class _AwesomeButtonState extends State<AwesomeButton>
     unawaited(_releasePressedState(onPressedOutSnapshot));
   }
 
-  void _handleAutoWidthMeasured(_AutoWidthMeasurement measurement) {
-    _sizeTextOwner.handleMeasurement(measurement);
+  void _handleAuxiliaryMeasured(_ButtonAuxiliaryMeasurement measurement) {
+    if (!mounted ||
+        measurement.revision != _auxiliaryMeasurementRevision ||
+        measurement == _auxiliaryMeasurement) {
+      return;
+    }
+    setState(() {
+      _auxiliaryMeasurement = measurement;
+    });
+    _sizeTextOwner.requestCurrentTargetMeasurement();
+  }
+
+  void _scheduleTextMeasurement(_AutoWidthMeasurement measurement) {
+    final key = Object.hash(
+      measurement.runId,
+      measurement.requestId,
+      measurement.metricRevision,
+      measurement.kind,
+      measurement.text,
+      measurement.requiredWidth.toStringAsFixed(3),
+      measurement.displayedRequiredWidth.toStringAsFixed(3),
+      measurement.availableWidth.toStringAsFixed(3),
+      measurement.constrained,
+      _auxiliaryMeasurementRevision,
+    );
+    if (_scheduledTextMeasurementKey == key) {
+      return;
+    }
+    _scheduledTextMeasurementKey = key;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted ||
+          _scheduledTextMeasurementKey != key ||
+          measurement.metricRevision != _textMetricRevision) {
+        return;
+      }
+      _scheduledTextMeasurementKey = null;
+      _sizeTextOwner.handleMeasurement(measurement);
+    });
+  }
+
+  void _scheduleCurrentTargetRemeasure(Object key) {
+    if (_scheduledTargetRemeasureKey == key) {
+      return;
+    }
+    _scheduledTargetRemeasureKey = key;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _scheduledTargetRemeasureKey != key) {
+        return;
+      }
+      _scheduledTargetRemeasureKey = null;
+      _sizeTextOwner.requestCurrentTargetMeasurement();
+    });
   }
 
   void _startProgressFlow({required bool physicalLifecycle}) {
@@ -720,149 +775,244 @@ class _AwesomeButtonState extends State<AwesomeButton>
           ]),
           builder: (context, child) {
             final sizePresentation = _sizeTextOwner.presentation;
-            final textScale = MediaQuery.textScalerOf(context).scale(1);
-            final textGrowthHeight = widget.child is String
-                ? resolvedStyle.textLineHeight * textScale +
-                    _contentPadding.vertical +
-                    (resolvedStyle.borderWidth * 2)
-                : 0.0;
-            final visualHeight =
-                math.max(sizePresentation.height, textGrowthHeight);
-            final totalHeight = visualHeight + resolvedStyle.raiseAmount;
-            final shadowHeight =
-                math.max(0.0, visualHeight - resolvedStyle.raiseAmount);
-            final shellWidth = switch (sizePresentation.widthMode) {
-              _ButtonWidthMode.stretch => double.infinity,
-              _ButtonWidthMode.fixed => sizePresentation.width,
-              _ButtonWidthMode.auto => sizePresentation.width,
-            };
-            final stretchFace = widget.stretch || shellWidth != null;
-            final pressValue = _interactionOwner.pressController.value;
-            final clampedPressValue = pressValue.clamp(0.0, 1.0);
-            final faceOffset = resolvedStyle.raiseAmount * pressValue;
-            final pressedOpacity = widget.progress
-                ? 1.0
-                : 1 -
-                    ((1 - _normalizedOpacity(widget.activeOpacity, 1)) *
-                        clampedPressValue);
-            final visual = Stack(
-              clipBehavior: Clip.none,
-              children: [
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: -(resolvedStyle.raiseAmount / 2),
-                  child: Transform.translate(
-                    offset: Offset(
-                      0,
-                      -(resolvedStyle.raiseAmount / 2) * pressValue,
+            return LayoutBuilder(
+              builder: (context, constraints) {
+                final labelTextStyle =
+                    _resolvedButtonLabelTextStyle(context, resolvedStyle);
+                final auxiliary = _auxiliaryMeasurement;
+                final displayedText = sizePresentation.displayedText;
+                final displayedRequiredWidth = auxiliary != null &&
+                        displayedText != null &&
+                        displayedText.isNotEmpty
+                    ? _measureButtonLabelOuterWidth(
+                        context: context,
+                        text: displayedText,
+                        textStyle: labelTextStyle,
+                        padding: _contentPadding,
+                        borderWidth: resolvedStyle.borderWidth,
+                        contentGap: resolvedStyle.contentGap,
+                        hasBefore: widget.before != null,
+                        hasAfter: widget.after != null,
+                        auxiliary: auxiliary,
+                      )
+                    : null;
+                final textScale = MediaQuery.textScalerOf(context).scale(1);
+                final textGrowthHeight = widget.child is String
+                    ? resolvedStyle.textLineHeight * textScale +
+                        _contentPadding.vertical +
+                        (resolvedStyle.borderWidth * 2)
+                    : 0.0;
+                final visualHeight =
+                    math.max(sizePresentation.height, textGrowthHeight);
+                final totalHeight = visualHeight + resolvedStyle.raiseAmount;
+                final shadowHeight =
+                    math.max(0.0, visualHeight - resolvedStyle.raiseAmount);
+                final requestedShellWidth =
+                    switch (sizePresentation.widthMode) {
+                  _ButtonWidthMode.stretch => double.infinity,
+                  _ButtonWidthMode.fixed => sizePresentation.width,
+                  _ButtonWidthMode.auto => auxiliary == null
+                      ? null
+                      : _reduceMotion && displayedRequiredWidth != null
+                          ? displayedRequiredWidth
+                          : sizePresentation.transientTextFrame &&
+                                  displayedRequiredWidth != null
+                              ? math.max(
+                                  sizePresentation.width ?? 0,
+                                  displayedRequiredWidth,
+                                )
+                              : sizePresentation.width ??
+                                  displayedRequiredWidth,
+                };
+                final availableWidth = requestedShellWidth == null
+                    ? displayedRequiredWidth ?? constraints.minWidth
+                    : requestedShellWidth.isFinite
+                        ? constraints.constrainWidth(requestedShellWidth)
+                        : constraints.maxWidth;
+                final metricSignature = Object.hashAll([
+                  labelTextStyle,
+                  DefaultTextStyle.of(context).textWidthBasis,
+                  DefaultTextStyle.of(context).textHeightBehavior,
+                  MediaQuery.textScalerOf(context),
+                  Localizations.maybeLocaleOf(context),
+                  direction,
+                  _contentPadding,
+                  resolvedStyle.borderWidth,
+                  resolvedStyle.contentGap,
+                  widget.before != null,
+                  widget.after != null,
+                  auxiliary,
+                  constraints.minWidth,
+                  constraints.maxWidth,
+                  availableWidth.toStringAsFixed(3),
+                ]);
+                if (_textMetricSignature != metricSignature) {
+                  _textMetricSignature = metricSignature;
+                  _textMetricRevision += 1;
+                }
+                final measurementRequest = sizePresentation.measurementRequest;
+                if (measurementRequest != null && auxiliary != null) {
+                  final requiredWidth = _measureButtonLabelOuterWidth(
+                    context: context,
+                    text: measurementRequest.text,
+                    textStyle: labelTextStyle,
+                    padding: _contentPadding,
+                    borderWidth: resolvedStyle.borderWidth,
+                    contentGap: resolvedStyle.contentGap,
+                    hasBefore: widget.before != null,
+                    hasAfter: widget.after != null,
+                    auxiliary: auxiliary,
+                  );
+                  _scheduleTextMeasurement(
+                    _AutoWidthMeasurement(
+                      runId: measurementRequest.runId,
+                      requestId: measurementRequest.requestId,
+                      metricRevision: _textMetricRevision,
+                      kind: measurementRequest.kind,
+                      text: measurementRequest.text,
+                      requiredWidth: requiredWidth,
+                      displayedRequiredWidth:
+                          displayedRequiredWidth ?? requiredWidth,
+                      availableWidth: availableWidth,
+                      constrained: requiredWidth >
+                          availableWidth + _textTransitionFitTolerance,
                     ),
-                    child: Align(
-                      alignment: Alignment.center,
-                      child: FractionallySizedBox(
-                        widthFactor: _shadowWidthFactor,
-                        child: _ButtonShadowLayer(
-                          height: shadowHeight,
-                          backgroundColor: resolvedStyle.shadowColor,
-                          borderRadius: borderRadius,
+                  );
+                } else if (sizePresentation.widthMode ==
+                        _ButtonWidthMode.auto &&
+                    !sizePresentation.transientTextFrame &&
+                    displayedText == widget.child &&
+                    displayedRequiredWidth != null &&
+                    sizePresentation.width != null &&
+                    (displayedRequiredWidth - sizePresentation.width!).abs() >=
+                        _textTransitionFitTolerance &&
+                    !_sizeTextOwner.widthController.isAnimating) {
+                  _scheduleCurrentTargetRemeasure(
+                    Object.hash(
+                      displayedText,
+                      displayedRequiredWidth.toStringAsFixed(3),
+                      sizePresentation.width!.toStringAsFixed(3),
+                      _auxiliaryMeasurementRevision,
+                    ),
+                  );
+                }
+                final shellWidth = requestedShellWidth;
+                final stretchFace = widget.stretch || shellWidth != null;
+                final pressValue = _interactionOwner.pressController.value;
+                final clampedPressValue = pressValue.clamp(0.0, 1.0);
+                final faceOffset = resolvedStyle.raiseAmount * pressValue;
+                final pressedOpacity = widget.progress
+                    ? 1.0
+                    : 1 -
+                        ((1 - _normalizedOpacity(widget.activeOpacity, 1)) *
+                            clampedPressValue);
+                final visual = Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: -(resolvedStyle.raiseAmount / 2),
+                      child: Transform.translate(
+                        offset: Offset(
+                          0,
+                          -(resolvedStyle.raiseAmount / 2) * pressValue,
+                        ),
+                        child: Align(
+                          alignment: Alignment.center,
+                          child: FractionallySizedBox(
+                            widthFactor: _shadowWidthFactor,
+                            child: _ButtonShadowLayer(
+                              height: shadowHeight,
+                              backgroundColor: resolvedStyle.shadowColor,
+                              borderRadius: borderRadius,
+                            ),
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ),
-                Positioned.fill(
-                  child: Padding(
-                    padding: EdgeInsets.only(top: resolvedStyle.raiseAmount),
-                    child: _ButtonBottomLayer(
-                      height: visualHeight,
-                      backgroundColor: resolvedStyle.depthColor,
-                      borderRadius: borderRadius,
-                      borderColor: resolvedStyle.borderColor,
-                      borderWidth: resolvedStyle.borderWidth,
-                      stretch: true,
+                    Positioned.fill(
+                      child: Padding(
+                        padding:
+                            EdgeInsets.only(top: resolvedStyle.raiseAmount),
+                        child: _ButtonBottomLayer(
+                          height: visualHeight,
+                          backgroundColor: resolvedStyle.depthColor,
+                          borderRadius: borderRadius,
+                          borderColor: resolvedStyle.borderColor,
+                          borderWidth: resolvedStyle.borderWidth,
+                          stretch: true,
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-                Transform.translate(
-                  offset: Offset(0, faceOffset),
-                  child: _ButtonFaceLayer(
-                    stretch: stretchFace,
-                    height: visualHeight,
-                    padding: _contentPadding,
-                    borderRadius: borderRadius,
-                    backgroundColor: resolvedStyle.backgroundColor,
-                    borderColor: resolvedStyle.borderColor,
-                    borderWidth: resolvedStyle.borderWidth,
-                    foregroundColor: resolvedStyle.foregroundColor,
-                    activeBackgroundColor: resolvedStyle.activeBackgroundColor,
-                    activeBackgroundOpacity: widget.showProgressBar ||
-                            !progressPresentation.showVisuals
-                        ? clampedPressValue
-                        : 0,
-                    hoverOverlayColor: _hoverFocusOverlayColor(
-                      resolvedStyle.pressedOverlayColor,
+                    Transform.translate(
+                      offset: Offset(0, faceOffset),
+                      child: _ButtonFaceLayer(
+                        stretch: stretchFace,
+                        height: visualHeight,
+                        padding: _contentPadding,
+                        borderRadius: borderRadius,
+                        backgroundColor: resolvedStyle.backgroundColor,
+                        borderColor: resolvedStyle.borderColor,
+                        borderWidth: resolvedStyle.borderWidth,
+                        activeBackgroundColor:
+                            resolvedStyle.activeBackgroundColor,
+                        activeBackgroundOpacity: widget.showProgressBar ||
+                                !progressPresentation.showVisuals
+                            ? clampedPressValue
+                            : 0,
+                        hoverOverlayColor: _hoverFocusOverlayColor(
+                          resolvedStyle.pressedOverlayColor,
+                        ),
+                        before: widget.before,
+                        after: widget.after,
+                        extra: widget.extra,
+                        contentGap: resolvedStyle.contentGap,
+                        backgroundPlaceholderColor:
+                            resolvedStyle.backgroundPlaceholderColor,
+                        progressFillColor: resolvedStyle.progressFillColor,
+                        activityColor: resolvedStyle.activityColor,
+                        progressValue: _progressOwner.progressController.value,
+                        progressOverlayOpacity:
+                            _progressOwner.overlayOpacityController.value,
+                        contentTransitionValue:
+                            _progressOwner.contentTransitionController.value,
+                        activityTransitionValue:
+                            _progressOwner.activityTransitionController.value,
+                        showProgressVisuals: progressPresentation.showVisuals,
+                        showProgressBar: widget.showProgressBar,
+                        animatedPlaceholder:
+                            widget.animatedPlaceholder && !_reduceMotion,
+                        textStyle: labelTextStyle,
+                        textLineHeight: resolvedStyle.textLineHeight,
+                        transientTextFrame: sizePresentation.transientTextFrame,
+                        alignTextLogicalLeading:
+                            sizePresentation.alignTextLogicalLeading,
+                        auxiliaryMeasurementRevision:
+                            _auxiliaryMeasurementRevision,
+                        onAuxiliaryMeasured: _handleAuxiliaryMeasured,
+                        child: widget.child,
+                        displayedText: sizePresentation.displayedText,
+                      ),
                     ),
-                    before: widget.before,
-                    after: widget.after,
-                    extra: widget.extra,
-                    contentGap: resolvedStyle.contentGap,
-                    backgroundPlaceholderColor:
-                        resolvedStyle.backgroundPlaceholderColor,
-                    progressFillColor: resolvedStyle.progressFillColor,
-                    activityColor: resolvedStyle.activityColor,
-                    progressValue: _progressOwner.progressController.value,
-                    progressOverlayOpacity:
-                        _progressOwner.overlayOpacityController.value,
-                    contentTransitionValue:
-                        _progressOwner.contentTransitionController.value,
-                    activityTransitionValue:
-                        _progressOwner.activityTransitionController.value,
-                    showProgressVisuals: progressPresentation.showVisuals,
-                    showProgressBar: widget.showProgressBar,
-                    animatedPlaceholder:
-                        widget.animatedPlaceholder && !_reduceMotion,
-                    textSize: resolvedStyle.textSize,
-                    textLineHeight: resolvedStyle.textLineHeight,
-                    textFontFamily: resolvedStyle.textFontFamily,
-                    child: widget.child,
-                    displayedText: sizePresentation.displayedText,
-                  ),
-                ),
-              ],
-            );
+                  ],
+                );
 
-            return SizedBox(
-              key: const ValueKey<String>('aws-btn-shell'),
-              width: shellWidth,
-              height: totalHeight,
-              child: Opacity(
-                key: const ValueKey<String>('aws-btn-pressed-opacity'),
-                opacity: pressedOpacity.clamp(0.0, 1.0),
-                child: visual,
-              ),
+                return SizedBox(
+                  key: const ValueKey<String>('aws-btn-shell'),
+                  width: shellWidth,
+                  height: totalHeight,
+                  child: Opacity(
+                    key: const ValueKey<String>('aws-btn-pressed-opacity'),
+                    opacity: pressedOpacity.clamp(0.0, 1.0),
+                    child: visual,
+                  ),
+                );
+              },
             );
           },
         );
-        final measurementRequest =
-            _sizeTextOwner.presentation.measurementRequest;
-        final interactiveChild = Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            shell,
-            if (measurementRequest != null)
-              _AutoWidthMeasurementProbe(
-                requestId: measurementRequest.requestId,
-                text: measurementRequest.text,
-                padding: _contentPadding,
-                borderWidth: resolvedStyle.borderWidth,
-                foregroundColor: resolvedStyle.foregroundColor,
-                textSize: resolvedStyle.textSize,
-                textLineHeight: resolvedStyle.textLineHeight,
-                textFontFamily: resolvedStyle.textFontFamily,
-                onMeasured: _handleAutoWidthMeasured,
-              ),
-          ],
-        );
+        final interactiveChild = shell;
 
         final minimumTarget =
             Theme.of(context).platform == TargetPlatform.android ? 48.0 : 44.0;

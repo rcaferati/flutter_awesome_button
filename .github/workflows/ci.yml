@@ -40,6 +40,12 @@ jobs:
       - name: Run package release preflight
         run: tool/release-preflight.sh
 
+      - name: Run Chrome text-transition contract tests
+        run: >-
+          flutter test --platform chrome
+          test/text_transition_test.dart
+          test/awesome_button_test.dart
+
       - name: Upload informational Flutter coverage
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2

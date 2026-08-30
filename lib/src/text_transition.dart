@@ -1,29 +1,47 @@
 import 'dart:math' as math;
 
 import 'package:flutter/scheduler.dart';
+// Flutter publicly re-exports the grapheme extension from widgets.dart.
+import 'package:flutter/widgets.dart' show StringCharacters;
 
-/// Delay between source-character randomization starts.
-const int textTransitionRandomizeStartStaggerMs = 5;
+/// Delay between transition-slot starts.
+const int textTransitionSlotStaggerMs = 7;
 
-/// Delay between new target-character expansion starts.
-const int textTransitionExpandStaggerMs = 5;
+/// Compatibility name for the source-slot stagger.
+const int textTransitionRandomizeStartStaggerMs = textTransitionSlotStaggerMs;
+
+/// Compatibility name for the introduced-slot stagger.
+const int textTransitionExpandStaggerMs = textTransitionSlotStaggerMs;
 
 /// Hold time after full randomization before collapse begins.
 const int textTransitionPostRandomizeHoldMs = 10;
 
-/// Delay between left-to-right collapse steps.
-const int textTransitionCollapseStaggerMs = 10;
+/// Compatibility name for the target-collapse stagger.
+const int textTransitionCollapseStaggerMs = textTransitionSlotStaggerMs;
 
-/// Approximate refresh interval used for frame-driven updates.
+/// Approximate refresh interval used only by tests and documentation.
+///
+/// Production updates are driven by the native frame clock rather than an
+/// interval timer.
 const int textTransitionRefreshMs = 16;
 
-const String _lowercaseLetters = 'abcdefghijklmnopqrstuvwxyz';
-const String _uppercaseLetters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+const String _lowercaseNarrowLetters = 'iljtfr';
+const String _lowercaseAverageLetters = 'acesuvxznhok';
+const String _lowercaseWideLetters = 'mwdbpqgy';
+const String _uppercaseNarrowLetters = 'ILJTFR';
+const String _uppercaseAverageLetters = 'ACESUVXZNHOK';
+const String _uppercaseWideLetters = 'MWDBPQGY';
 const String _digits = '0123456789';
 const String _symbols = '#%&^+=-';
 
-/// Callback that receives the currently rendered transition string.
+/// Callback that receives a candidate transition string.
 typedef TextTransitionUpdate = void Function(String value);
+
+/// Callback that receives monotonic elapsed transition time.
+typedef TextTransitionTick = void Function(
+  int elapsedMs,
+  TextTransitionTimeline timeline,
+);
 
 /// Random source used to generate scrambled transition characters.
 typedef TextTransitionRandom = double Function();
@@ -33,6 +51,12 @@ final math.Random _defaultTextTransitionRandomizer = math.Random();
 double _defaultTextTransitionRandom() =>
     _defaultTextTransitionRandomizer.nextDouble();
 
+int _normalizedSlotStagger(int value) => math.max(0, value);
+
+List<String> _graphemes(String value) => value.characters.toList(
+      growable: false,
+    );
+
 /// Timing breakdown for a text transition from one string to another.
 class TextTransitionTimeline {
   /// Creates a transition timeline.
@@ -40,22 +64,26 @@ class TextTransitionTimeline {
     required this.sourceLength,
     required this.targetLength,
     required this.maxLength,
+    required this.slotStaggerMs,
     required this.lastSourceRandomizeStartMs,
     required this.lastRandomizeStartMs,
     required this.collapseStartMs,
     required this.totalDurationMs,
   });
 
-  /// Length of the source string.
+  /// Number of source grapheme clusters.
   final int sourceLength;
 
-  /// Length of the target string.
+  /// Number of target grapheme clusters.
   final int targetLength;
 
-  /// Longest string length used during the transition.
+  /// Longest grapheme-cluster count used during the transition.
   final int maxLength;
 
-  /// Last stagger time for source-character randomization.
+  /// Normalized delay between logical transition slots.
+  final int slotStaggerMs;
+
+  /// Last stagger time for source-slot randomization.
   final int lastSourceRandomizeStartMs;
 
   /// Last stagger time for any randomization step.
@@ -64,7 +92,7 @@ class TextTransitionTimeline {
   /// Time at which collapse into the target text begins.
   final int collapseStartMs;
 
-  /// Total transition duration.
+  /// Complete text-transition duration.
   final int totalDurationMs;
 }
 
@@ -74,57 +102,43 @@ abstract class TextTransitionController {
   void stop();
 }
 
-/// Returns the time at which a given slot starts scrambling.
+/// Returns the time at which a logical slot starts scrambling.
 int? getTextTransitionRandomizeStartMs(
   int index,
   int sourceLength,
-  int targetLength,
-) {
-  if (index < sourceLength) {
-    return index * textTransitionRandomizeStartStaggerMs;
+  int targetLength, {
+  int slotStaggerMs = textTransitionSlotStaggerMs,
+}) {
+  final maxLength = math.max(sourceLength, targetLength);
+  if (index < 0 || index >= maxLength) {
+    return null;
   }
-
-  if (index < targetLength) {
-    final lastSourceStartMs = sourceLength > 0
-        ? (sourceLength - 1) * textTransitionRandomizeStartStaggerMs
-        : 0;
-
-    return lastSourceStartMs +
-        (index - sourceLength + 1) * textTransitionExpandStaggerMs;
-  }
-
-  return null;
+  return index * _normalizedSlotStagger(slotStaggerMs);
 }
 
 /// Builds the timeline used to animate from [fromText] to [targetText].
 TextTransitionTimeline getTextTransitionTimeline(
   String fromText,
-  String targetText,
-) {
-  final sourceLength = fromText.length;
-  final targetLength = targetText.length;
+  String targetText, {
+  int slotStaggerMs = textTransitionSlotStaggerMs,
+}) {
+  final sourceLength = fromText.characters.length;
+  final targetLength = targetText.characters.length;
   final maxLength = math.max(sourceLength, targetLength);
-  final lastSourceRandomizeStartMs = sourceLength > 0
-      ? (sourceLength - 1) * textTransitionRandomizeStartStaggerMs
-      : 0;
-  final lastRandomizeStartMs = maxLength == 0
-      ? 0
-      : (getTextTransitionRandomizeStartMs(
-            maxLength - 1,
-            sourceLength,
-            targetLength,
-          ) ??
-          0);
+  final stagger = _normalizedSlotStagger(slotStaggerMs);
+  final lastSourceRandomizeStartMs =
+      sourceLength > 0 ? (sourceLength - 1) * stagger : 0;
+  final lastRandomizeStartMs = maxLength > 0 ? (maxLength - 1) * stagger : 0;
   final collapseStartMs =
       lastRandomizeStartMs + textTransitionPostRandomizeHoldMs;
-  final totalDurationMs = maxLength == 0
-      ? 0
-      : collapseStartMs + (maxLength - 1) * textTransitionCollapseStaggerMs;
+  final totalDurationMs =
+      maxLength == 0 ? 0 : collapseStartMs + (maxLength - 1) * stagger;
 
   return TextTransitionTimeline(
     sourceLength: sourceLength,
     targetLength: targetLength,
     maxLength: maxLength,
+    slotStaggerMs: stagger,
     lastSourceRandomizeStartMs: lastSourceRandomizeStartMs,
     lastRandomizeStartMs: lastRandomizeStartMs,
     collapseStartMs: collapseStartMs,
@@ -132,46 +146,107 @@ TextTransitionTimeline getTextTransitionTimeline(
   );
 }
 
-/// Returns the randomization character set appropriate for [character].
+bool _isWhitespace(String grapheme) =>
+    grapheme.isNotEmpty && RegExp(r'^\s+$', unicode: true).hasMatch(grapheme);
+
+/// Returns the canonical randomization pool for [character].
+///
+/// Unsupported grapheme clusters return null and therefore remain unchanged.
 String? getTextTransitionCharset(String character) {
-  if (RegExp(r'\s').hasMatch(character)) {
+  if (_isWhitespace(character)) {
     return null;
   }
-
-  if (RegExp(r'\d').hasMatch(character)) {
+  if (character.length != 1) {
+    return null;
+  }
+  if (_digits.contains(character)) {
     return _digits;
   }
-
-  if (character.toUpperCase() == character &&
-      character.toLowerCase() != character) {
-    return _uppercaseLetters;
+  if (_symbols.contains(character)) {
+    return _symbols;
   }
-
-  if (character.toLowerCase() == character &&
-      character.toUpperCase() != character) {
-    return _lowercaseLetters;
+  if (_lowercaseNarrowLetters.contains(character)) {
+    return _lowercaseNarrowLetters;
   }
-
-  return _symbols;
+  if (_lowercaseAverageLetters.contains(character)) {
+    return _lowercaseAverageLetters;
+  }
+  if (_lowercaseWideLetters.contains(character)) {
+    return _lowercaseWideLetters;
+  }
+  if (_uppercaseNarrowLetters.contains(character)) {
+    return _uppercaseNarrowLetters;
+  }
+  if (_uppercaseAverageLetters.contains(character)) {
+    return _uppercaseAverageLetters;
+  }
+  if (_uppercaseWideLetters.contains(character)) {
+    return _uppercaseWideLetters;
+  }
+  return null;
 }
 
-/// Returns a scrambled replacement character compatible with [character].
+/// Returns a scrambled replacement grapheme compatible with [character].
 String getRandomTransitionCharacter(
   String character, [
   TextTransitionRandom random = _defaultTextTransitionRandom,
 ]) {
   final charset = getTextTransitionCharset(character);
-
   if (charset == null) {
     return character;
   }
 
+  final graphemes = _graphemes(charset);
   final index = math.min(
-    charset.length - 1,
-    (random() * charset.length).floor(),
+    graphemes.length - 1,
+    math.max(0, (random() * graphemes.length).floor()),
   );
+  return graphemes[index];
+}
 
-  return charset[index];
+int _collapseOrder(int index, TextTransitionTimeline timeline) {
+  if (timeline.targetLength >= timeline.sourceLength) {
+    return index;
+  }
+  if (index >= timeline.targetLength) {
+    return timeline.sourceLength - 1 - index;
+  }
+  return timeline.sourceLength - timeline.targetLength + index;
+}
+
+String _buildTextTransitionFrame(
+  List<String> source,
+  List<String> target,
+  TextTransitionTimeline timeline,
+  int elapsedMs,
+  TextTransitionRandom random,
+) {
+  if (source.isEmpty || source.join() == target.join()) {
+    return target.join();
+  }
+
+  final elapsed = math.max(0, elapsedMs);
+  if (elapsed >= timeline.totalDurationMs) {
+    return target.join();
+  }
+
+  return List<String>.generate(timeline.maxLength, (index) {
+    final randomizeStartMs = index * timeline.slotStaggerMs;
+    final collapseMs = timeline.collapseStartMs +
+        _collapseOrder(index, timeline) * timeline.slotStaggerMs;
+    final sourceCharacter = index < source.length ? source[index] : '';
+    final targetCharacter = index < target.length ? target[index] : '';
+    final randomSourceCharacter =
+        index < source.length ? sourceCharacter : targetCharacter;
+
+    if (elapsed < randomizeStartMs) {
+      return sourceCharacter;
+    }
+    if (elapsed >= collapseMs) {
+      return targetCharacter;
+    }
+    return getRandomTransitionCharacter(randomSourceCharacter, random);
+  }).join();
 }
 
 /// Builds the visible transition frame for a given elapsed time.
@@ -181,43 +256,38 @@ String buildTextTransitionFrame(
   int elapsedMs, [
   TextTransitionRandom random = _defaultTextTransitionRandom,
 ]) {
-  if (fromText.isEmpty) {
-    return targetText;
-  }
+  final source = _graphemes(fromText);
+  final target = _graphemes(targetText);
+  return _buildTextTransitionFrame(
+    source,
+    target,
+    getTextTransitionTimeline(fromText, targetText),
+    elapsedMs,
+    random,
+  );
+}
 
-  if (fromText == targetText) {
-    return targetText;
-  }
-
-  final timeline = getTextTransitionTimeline(fromText, targetText);
-
-  if (elapsedMs >= timeline.totalDurationMs) {
-    return targetText;
-  }
-
-  return List<String>.generate(timeline.maxLength, (index) {
-    final randomizeStartMs = getTextTransitionRandomizeStartMs(
-      index,
-      timeline.sourceLength,
-      timeline.targetLength,
-    );
-    final collapseMs =
-        timeline.collapseStartMs + index * textTransitionCollapseStaggerMs;
-    final sourceCharacter = index < fromText.length ? fromText[index] : '';
-    final targetCharacter = index < targetText.length ? targetText[index] : '';
-    final randomSourceCharacter =
-        index >= timeline.sourceLength ? targetCharacter : sourceCharacter;
-
-    if (randomizeStartMs == null || elapsedMs < randomizeStartMs) {
-      return sourceCharacter;
-    }
-
-    if (elapsedMs >= collapseMs) {
-      return targetCharacter;
-    }
-
-    return getRandomTransitionCharacter(randomSourceCharacter, random);
-  }).join();
+/// Builds a frame with an explicit stagger for deterministic contract tests.
+String buildTextTransitionFrameWithStagger({
+  required String fromText,
+  required String targetText,
+  required int elapsedMs,
+  required int slotStaggerMs,
+  TextTransitionRandom random = _defaultTextTransitionRandom,
+}) {
+  final source = _graphemes(fromText);
+  final target = _graphemes(targetText);
+  return _buildTextTransitionFrame(
+    source,
+    target,
+    getTextTransitionTimeline(
+      fromText,
+      targetText,
+      slotStaggerMs: slotStaggerMs,
+    ),
+    elapsedMs,
+    random,
+  );
 }
 
 /// Runs the frame-driven text transition and returns a controller handle.
@@ -226,11 +296,19 @@ TextTransitionController runTextTransition({
   required String targetText,
   required TextTransitionUpdate onUpdate,
   VoidCallback? onComplete,
+  TextTransitionTick? onTick,
   TextTransitionRandom random = _defaultTextTransitionRandom,
+  int slotStaggerMs = textTransitionSlotStaggerMs,
 }) {
-  final timeline = getTextTransitionTimeline(fromText, targetText);
+  final source = _graphemes(fromText);
+  final target = _graphemes(targetText);
+  final timeline = getTextTransitionTimeline(
+    fromText,
+    targetText,
+    slotStaggerMs: slotStaggerMs,
+  );
 
-  if (fromText.isEmpty || targetText.isEmpty || fromText == targetText) {
+  if (source.isEmpty || target.isEmpty || fromText == targetText) {
     onUpdate(targetText);
     onComplete?.call();
     return const _NoopTextTransitionController();
@@ -238,10 +316,11 @@ TextTransitionController runTextTransition({
 
   return _FrameTextTransitionController(
     timeline: timeline,
-    fromText: fromText,
-    targetText: targetText,
+    source: source,
+    target: target,
     onUpdate: onUpdate,
     onComplete: onComplete,
+    onTick: onTick,
     random: random,
   )..start();
 }
@@ -249,18 +328,20 @@ TextTransitionController runTextTransition({
 class _FrameTextTransitionController implements TextTransitionController {
   _FrameTextTransitionController({
     required this.timeline,
-    required this.fromText,
-    required this.targetText,
+    required this.source,
+    required this.target,
     required this.onUpdate,
     required this.onComplete,
+    required this.onTick,
     required this.random,
   });
 
   final TextTransitionTimeline timeline;
-  final String fromText;
-  final String targetText;
+  final List<String> source;
+  final List<String> target;
   final TextTransitionUpdate onUpdate;
   final VoidCallback? onComplete;
+  final TextTransitionTick? onTick;
   final TextTransitionRandom random;
 
   int? _frameCallbackId;
@@ -286,7 +367,6 @@ class _FrameTextTransitionController implements TextTransitionController {
     if (_stopped) {
       return;
     }
-
     SchedulerBinding.instance.ensureVisualUpdate();
     _frameCallbackId = SchedulerBinding.instance.scheduleFrameCallback(_tick);
   }
@@ -301,24 +381,31 @@ class _FrameTextTransitionController implements TextTransitionController {
       timeline.totalDurationMs,
       (timestamp - _startTimestamp!).inMilliseconds,
     );
-    final nextValue = buildTextTransitionFrame(
-      fromText,
-      targetText,
+    onTick?.call(elapsedMs, timeline);
+    if (_stopped) {
+      return;
+    }
+
+    final nextValue = _buildTextTransitionFrame(
+      source,
+      target,
+      timeline,
       elapsedMs,
       random,
     );
-
     if (nextValue != _lastPublishedValue) {
       _lastPublishedValue = nextValue;
       onUpdate(nextValue);
     }
 
+    if (_stopped) {
+      return;
+    }
     if (elapsedMs >= timeline.totalDurationMs) {
       _frameCallbackId = null;
       onComplete?.call();
       return;
     }
-
     _scheduleNextFrame();
   }
 }

@@ -77,19 +77,30 @@ widgets.
 
 `animateSize` is enabled by default.
 
-- fixed `width` / `height` changes animate with `125ms cubic-bezier(0.3, 0.05, 0.2, 1)`
+- fixed `width` / `height` changes animate with `175ms cubic-bezier(0.3, 0.05, 0.2, 1)`
 - `ThemedButton` size preset changes animate because they resolve to fixed
   width and height updates
 - auto-width string labels grow and shrink when their measured target width
   changes
-- with `textTransition` plus auto width, wider labels animate text while
-  growing and narrower labels start text first, then shrink width `50ms` later
+- `textTransition` operates on Unicode grapheme clusters, using a `7ms` logical
+  slot stagger and a `10ms` post-randomization hold
+- with `textTransition` plus auto width, growth starts width immediately and
+  starts text at `30%` of the text timeline; shrink starts text immediately and
+  starts width at `30%`; width animation lasts for the full text timeline
+- every transient frame is measured with the resolved typography and published
+  only when it fits the currently available auto width
+- transient labels are always a single clipped line. Fixed, stretch, and
+  externally constrained layouts use clipping as a safety fallback; stable
+  labels regain normal wrapping and accessibility scaling after settlement
+- when `textTransition` is disabled, the target label updates immediately even
+  if `animateSize` continues animating its geometry
 - `animateSize: false` keeps size changes instant
 - fixed-to-auto and auto-to-fixed changes remain instant
 
-Flutter keeps auto-width target measurement in-tree. The hidden probe is an
-offstage sibling of the visible shell, so it does not use an overlay or route
-surface and it cannot intercept input.
+Flutter measures labels with the same resolved text style, scaling, locale, and
+direction used for rendering. Leading and trailing slot widths are reported by
+the rendered content row, so consumer widgets are never composed a second time;
+`extra` remains an overlay and does not affect intrinsic width.
 
 ```dart
 import 'package:flutter/material.dart';
@@ -362,7 +373,7 @@ The public prop surface is typed through `AwesomeButton` and `ThemedButton`.
 | `showProgressBar` | `bool` | `true` | Renders the loading bar during progress. When `false`, progress keeps the spinner and lifecycle but hides the bar. |
 | `progressLoadingTime` | `Duration` | `3000ms` | Duration of the loading bar travel in progress mode. |
 | `animateSize` | `bool` | `true` | Animates fixed-size geometry changes and auto-width string-label changes. |
-| `textTransition` | `bool` | `false` | Enables the built-in scramble/reveal animation when a plain string label changes after mount. |
+| `textTransition` | `bool` | `false` | Enables the Unicode-aware, measured scramble/reveal animation when a non-empty plain string label changes after mount. Transient frames remain single-line and semantics expose the stable target. |
 | `animatedPlaceholder` | `bool` | `true` | Enables the shimmer loop when the button has no `child`. |
 | `accessibilityLabel` | `String?` | `null` | Spoken identity override; string content is inferred when absent. |
 | `accessibilityHint` | `String?` | `null` | Optional explanation for ordinary semantic activation. |
@@ -383,7 +394,7 @@ The public prop surface is typed through `AwesomeButton` and `ThemedButton`.
 | `name` | `ThemeName?` | `null` | Named built-in theme selector. Falls back safely to `basic` if invalid. |
 | `type` | `ButtonVariant` | `ButtonVariant.primary` | Built-in variant to resolve from the selected theme. |
 | `size` | `ButtonSize` | `ButtonSize.medium` | Built-in theme size preset: `icon`, `small`, `medium`, or `large`. |
-| `flat` | `bool` | `false` | Requests the `flat` theme variant when available. |
+| `flat` | `bool` | `false` | Requests the `flat` theme variant when available, including while disabled. |
 | `transparent` | `bool` | `false` | Makes the visible shell layers transparent while keeping content, press, and progress feedback active. |
 | `autoWidth` | `bool` | `false` | Requests in-tree measured auto width instead of the size preset width. String labels can animate width changes. |
 
