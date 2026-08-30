@@ -5,6 +5,13 @@ import '../awesome_button_theme_data.dart';
 import 'colors.dart' as themed_colors;
 import 'models.dart';
 
+double? _normalizedThemeRadius(double? value) {
+  if (value == null || !value.isFinite) {
+    return null;
+  }
+  return value < 0 ? 0 : value;
+}
+
 /// Transparent overrides applied when a themed button opts into transparent
 /// rendering.
 const ThemeButtonStyle transparentStyles = ThemeButtonStyle(
@@ -114,11 +121,15 @@ AwesomeButtonStyle themeButtonStyleToAwesomeButtonStyle(
 }
 
 BorderRadiusGeometry? _resolveBorderRadius(ThemeButtonStyle style) {
-  final baseRadius = style.borderRadius;
-  final hasDirectionalRadius = style.borderBottomLeftRadius != null ||
-      style.borderBottomRightRadius != null ||
-      style.borderTopLeftRadius != null ||
-      style.borderTopRightRadius != null;
+  final baseRadius = _normalizedThemeRadius(style.borderRadius);
+  final bottomLeft = _normalizedThemeRadius(style.borderBottomLeftRadius);
+  final bottomRight = _normalizedThemeRadius(style.borderBottomRightRadius);
+  final topLeft = _normalizedThemeRadius(style.borderTopLeftRadius);
+  final topRight = _normalizedThemeRadius(style.borderTopRightRadius);
+  final hasDirectionalRadius = bottomLeft != null ||
+      bottomRight != null ||
+      topLeft != null ||
+      topRight != null;
 
   if (!hasDirectionalRadius) {
     if (baseRadius == null) {
@@ -129,10 +140,9 @@ BorderRadiusGeometry? _resolveBorderRadius(ThemeButtonStyle style) {
 
   final resolvedRadius = baseRadius ?? 0;
   return BorderRadius.only(
-    topLeft: Radius.circular(style.borderTopLeftRadius ?? resolvedRadius),
-    topRight: Radius.circular(style.borderTopRightRadius ?? resolvedRadius),
-    bottomLeft: Radius.circular(style.borderBottomLeftRadius ?? resolvedRadius),
-    bottomRight:
-        Radius.circular(style.borderBottomRightRadius ?? resolvedRadius),
+    topLeft: Radius.circular(topLeft ?? resolvedRadius),
+    topRight: Radius.circular(topRight ?? resolvedRadius),
+    bottomLeft: Radius.circular(bottomLeft ?? resolvedRadius),
+    bottomRight: Radius.circular(bottomRight ?? resolvedRadius),
   );
 }

@@ -225,6 +225,35 @@ void main() {
     );
   });
 
+  testWidgets(
+    'missing requested and primary styles use the package fallback',
+    (tester) async {
+      const buttonKey = Key('missing-primary-fallback');
+      final base = buildMinimalTheme();
+      final emptyTheme = ThemeDefinition(
+        title: base.title,
+        background: base.background,
+        color: base.color,
+        buttons: const {},
+        size: base.size,
+      );
+
+      await tester.pumpWidget(
+        wrapForTest(
+          ThemedButton(
+            key: buttonKey,
+            config: emptyTheme,
+            type: ButtonVariant.danger,
+            onPress: _noop,
+            child: const Text('Fallback'),
+          ),
+        ),
+      );
+
+      expect(faceColorOf(tester, buttonKey), const Color(0xFF2563EB));
+    },
+  );
+
   test('transparent overrides the RN palette fields only', () {
     const base = ThemeButtonStyle(
       backgroundColor: Color(0xFF2563EB),
@@ -285,7 +314,7 @@ void main() {
     expect(tester.getSize(shellFinderFor(buttonKey)).width, 200);
   });
 
-  testWidgets('size presets override width, height, and typography', (
+  testWidgets('variant dimensions precede size while size fills missing text', (
     tester,
   ) async {
     const buttonKey = Key('small-themed-button');
@@ -303,7 +332,7 @@ void main() {
     );
 
     expect(tester.getSize(shellFinderFor(buttonKey)).width, 120);
-    expect(tester.getSize(faceFinderFor(buttonKey)).height, 44);
+    expect(tester.getSize(faceFinderFor(buttonKey)).height, 60);
 
     final richText = tester.widget<RichText>(
       find
@@ -316,7 +345,41 @@ void main() {
     expect(richText.text.style?.fontSize, 12);
   });
 
-  testWidgets('size preset changes animate by default and snap when disabled', (
+  testWidgets(
+    'non-finite optional overrides fall through normal themed precedence',
+    (tester) async {
+      const buttonKey = Key('invalid-themed-overrides');
+
+      await tester.pumpWidget(
+        wrapForTest(
+          ThemedButton(
+            key: buttonKey,
+            config: buildMinimalTheme(),
+            size: ButtonSize.small,
+            width: double.nan,
+            height: double.infinity,
+            style: const AwesomeButtonStyle(textSize: double.nan),
+            onPress: _noop,
+            child: const Text('Safe fallback'),
+          ),
+        ),
+      );
+
+      expect(tester.getSize(shellFinderFor(buttonKey)).width, 120);
+      expect(tester.getSize(faceFinderFor(buttonKey)).height, 52);
+      final richText = tester.widget<RichText>(
+        find
+            .descendant(
+              of: find.byKey(buttonKey),
+              matching: find.byType(RichText),
+            )
+            .first,
+      );
+      expect(richText.text.style?.fontSize, 18);
+    },
+  );
+
+  testWidgets('size width changes animate while variant height stays stable', (
     tester,
   ) async {
     const animatedKey = Key('animated-themed-size-button');
@@ -348,8 +411,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 60));
     expect(tester.getSize(shellFinderFor(animatedKey)).width, greaterThan(120));
     expect(tester.getSize(shellFinderFor(animatedKey)).width, lessThan(250));
-    expect(tester.getSize(faceFinderFor(animatedKey)).height, greaterThan(44));
-    expect(tester.getSize(faceFinderFor(animatedKey)).height, lessThan(60));
+    expect(tester.getSize(faceFinderFor(animatedKey)).height, 52);
 
     await tester.pumpAndSettle();
     expect(tester.getSize(shellFinderFor(animatedKey)).width, 250);
@@ -383,7 +445,7 @@ void main() {
     );
 
     expect(tester.getSize(shellFinderFor(instantKey)).width, 250);
-    expect(tester.getSize(faceFinderFor(instantKey)).height, 60);
+    expect(tester.getSize(faceFinderFor(instantKey)).height, 52);
   });
 
   testWidgets('autoWidth bypasses themed size width presets', (tester) async {
@@ -749,9 +811,9 @@ void main() {
           )
           .first,
     );
-    expect(richText.text.style?.fontSize, 16);
+    expect(richText.text.style?.fontSize, 18);
     expect(richText.text.style?.fontFamily, 'ThemedFont');
-    expect(richText.text.style?.height, closeTo(24 / 16, 0.001));
+    expect(richText.text.style?.height, closeTo(24 / 18, 0.001));
   });
 
   testWidgets(
@@ -796,6 +858,82 @@ void main() {
       findsOneWidget,
     );
     expect(activeBackgroundOpacityOf(tester, buttonKey), 0);
+  });
+
+  testWidgets(
+    'direct themed style changes use their resolved animation duration',
+    (tester) async {
+      const buttonKey = Key('direct-themed-style-transition');
+      late StateSetter update;
+      var backgroundColor = Colors.black;
+
+      await tester.pumpWidget(
+        wrapForTest(
+          StatefulBuilder(
+            builder: (context, setState) {
+              update = setState;
+              return ThemedButton(
+                key: buttonKey,
+                style: AwesomeButtonStyle(
+                  backgroundColor: backgroundColor,
+                  animationDuration: const Duration(milliseconds: 200),
+                ),
+                onPress: _noop,
+                child: const Text('Styled'),
+              );
+            },
+          ),
+        ),
+      );
+
+      update(() => backgroundColor = Colors.white);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+
+      final midpoint = faceColorOf(tester, buttonKey);
+      expect(midpoint, isNot(Colors.black));
+      expect(midpoint, isNot(Colors.white));
+
+      await tester.pumpAndSettle();
+      expect(faceColorOf(tester, buttonKey), Colors.white);
+    },
+  );
+
+  testWidgets('themed variant transition owns its exact final frame', (
+    tester,
+  ) async {
+    const buttonKey = Key('themed-final-frame-owner');
+    late StateSetter update;
+    final config = buildMinimalTheme();
+    var variant = ButtonVariant.primary;
+
+    await tester.pumpWidget(
+      wrapForTest(
+        StatefulBuilder(
+          builder: (context, setState) {
+            update = setState;
+            return ThemedButton(
+              key: buttonKey,
+              config: config,
+              type: variant,
+              onPress: _noop,
+              child: const Text('Variant'),
+            );
+          },
+        ),
+      ),
+    );
+
+    update(() => variant = ButtonVariant.secondary);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(faceColorOf(tester, buttonKey), isNot(const Color(0xFFE2E8F0)));
+
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(faceColorOf(tester, buttonKey), const Color(0xFFE2E8F0));
+
+    await tester.pump(const Duration(milliseconds: 70));
+    expect(faceColorOf(tester, buttonKey), const Color(0xFFE2E8F0));
   });
 }
 

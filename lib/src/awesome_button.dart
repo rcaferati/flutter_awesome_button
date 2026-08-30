@@ -9,6 +9,7 @@ import 'package:flutter/rendering.dart';
 
 import 'awesome_button_style.dart';
 import 'awesome_button_theme_data.dart';
+import 'style_frame_scope.dart';
 import 'text_transition.dart';
 
 /// Completion callback used by progress buttons.
@@ -17,9 +18,54 @@ typedef AwesomeButtonNext = void Function([VoidCallback? callback]);
 /// Press handler used by [AwesomeButton] and [ThemedButton].
 typedef AwesomeButtonPressCallback = void Function([AwesomeButtonNext? next]);
 
+double? _normalizedOptionalDimension(double? value) {
+  if (value == null || !value.isFinite) {
+    return null;
+  }
+  return math.max(0, value);
+}
+
+double _normalizedRequiredDimension(double value, double fallback) {
+  return _normalizedOptionalDimension(value) ?? fallback;
+}
+
+double _normalizedOpacity(double value, double fallback) {
+  final finite = value.isFinite ? value : fallback;
+  return finite.clamp(0.0, 1.0);
+}
+
+Duration _normalizedDuration(Duration value) {
+  if (value.isNegative) {
+    return Duration.zero;
+  }
+  return value;
+}
+
+Duration? _normalizedOptionalDuration(Duration? value) {
+  if (value == null) {
+    return null;
+  }
+  return value.isNegative ? Duration.zero : value;
+}
+
+Radius _normalizedRadius(Radius radius) {
+  final x = radius.x.isFinite ? math.max(0.0, radius.x) : 0.0;
+  final y = radius.y.isFinite ? math.max(0.0, radius.y) : 0.0;
+  return Radius.elliptical(x, y);
+}
+
+BorderRadius _normalizedBorderRadius(BorderRadius radius) {
+  return BorderRadius.only(
+    topLeft: _normalizedRadius(radius.topLeft),
+    topRight: _normalizedRadius(radius.topRight),
+    bottomLeft: _normalizedRadius(radius.bottomLeft),
+    bottomRight: _normalizedRadius(radius.bottomRight),
+  );
+}
+
 const double _defaultHorizontalPadding = 16;
 const double _defaultVerticalPadding = 0;
-const Duration _sizeAnimationDuration = Duration(milliseconds: 125);
+const Duration _sizeAnimationDuration = Duration(milliseconds: 175);
 const Curve _sizeAnimationCurve = Cubic(0.3, 0.05, 0.2, 1);
 const Duration _shrinkWidthAnimationDelay = Duration(milliseconds: 50);
 
@@ -66,6 +112,10 @@ class AwesomeButton extends StatefulWidget {
     this.animateSize = true,
     this.textTransition = false,
     this.animatedPlaceholder = true,
+    this.pressInAnimationDuration,
+    this.accessibilityLabel,
+    this.accessibilityHint,
+    this.accessibilityLongPressLabel,
     this.onPressIn,
     this.onPressOut,
     this.onPressedIn,
@@ -146,6 +196,18 @@ class AwesomeButton extends StatefulWidget {
   /// Whether placeholder buttons should animate their shimmer.
   final bool animatedPlaceholder;
 
+  /// Optional press-down timing override.
+  final Duration? pressInAnimationDuration;
+
+  /// Explicit accessible name. Plain string children are inferred when absent.
+  final String? accessibilityLabel;
+
+  /// Optional assistive-technology usage hint.
+  final String? accessibilityHint;
+
+  /// Optional label for the assistive long-press action.
+  final String? accessibilityLongPressLabel;
+
   /// Callback fired when a pointer/touch down arms the pressed state.
   final VoidCallback? onPressIn;
 
@@ -174,13 +236,13 @@ class _AwesomeButtonState extends State<AwesomeButton>
     with TickerProviderStateMixin {
   static const Duration _progressSwapDuration = Duration(milliseconds: 300);
   static const Duration _progressFillCompletionDuration = Duration(
-    milliseconds: 200,
+    milliseconds: 120,
   );
   static const Duration _progressOverlayFadeDuration = Duration(
-    milliseconds: 200,
+    milliseconds: 160,
   );
   static const Duration _progressOverlayFadeDelay = Duration(
-    milliseconds: 100,
+    milliseconds: 120,
   );
   static const double _shadowWidthFactor = 0.98;
   static const double _releaseSpringTension = 100;
@@ -205,11 +267,19 @@ class _AwesomeButtonState extends State<AwesomeButton>
   bool _hovered = false;
   bool _focused = false;
   bool _pressArmed = false;
+  bool _longPressArmed = false;
+  bool _longPressDisarmed = false;
+  bool _longPressDispatched = false;
+  bool _reduceMotion = false;
+  bool _releaseInProgress = false;
+  VoidCallback? _releaseCompletionSnapshot;
   bool _busy = false;
   bool _nextConsumed = false;
+  bool _progressHasPhysicalLifecycle = true;
   bool _showProgressVisuals = false;
   bool _debounceActive = false;
   Timer? _debounceResetTimer;
+  Timer? _longPressTimer;
   Timer? _delayedWidthAnimationTimer;
   late String? _displayedText;
   late String? _currentTextTarget;
@@ -231,6 +301,8 @@ class _AwesomeButtonState extends State<AwesomeButton>
       AwesomeButtonThemeData.fallbackStyle.animationDuration!;
   Curve _pressAnimationCurve =
       AwesomeButtonThemeData.fallbackStyle.animationCurve!;
+  int _gestureId = 0;
+  int _progressRunId = 0;
 
   @override
   void initState() {
@@ -265,10 +337,12 @@ class _AwesomeButtonState extends State<AwesomeButton>
     _displayedText = initialText;
     _currentTextTarget = initialText;
     _widthMode = _widthModeFor(widget);
-    _resolvedWidth = _widthMode == _ButtonWidthMode.fixed ? widget.width : null;
-    _resolvedHeight = widget.height;
-    _heightAnimationFrom = widget.height;
-    _heightAnimationTo = widget.height;
+    _resolvedWidth = _widthMode == _ButtonWidthMode.fixed
+        ? _normalizedOptionalDimension(widget.width)
+        : null;
+    _resolvedHeight = _normalizedRequiredDimension(widget.height, 52);
+    _heightAnimationFrom = _resolvedHeight;
+    _heightAnimationTo = _resolvedHeight;
     final initialMeasurementText = _autoWidthMeasurementTextFor(widget);
     if (initialMeasurementText != null) {
       _sizeRunId += 1;
@@ -281,12 +355,18 @@ class _AwesomeButtonState extends State<AwesomeButton>
   void didUpdateWidget(covariant AwesomeButton oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.progressLoadingTime != widget.progressLoadingTime) {
-      _progressController.duration = widget.progressLoadingTime;
+      _progressController.duration = _normalizedDuration(
+        widget.progressLoadingTime,
+      );
     }
-    if (widget.disabled && !_busy && _pressArmed) {
-      _pressArmed = false;
-      _notifyPressOut();
-      _releasePressedState();
+    if (oldWidget.onLongPress != null && widget.onLongPress == null) {
+      _disarmLongPress();
+    }
+    if ((widget.disabled || widget.child == null) && !_busy && _pressArmed) {
+      _cancelPhysicalGesture(notifyPressOut: true);
+    }
+    if ((widget.disabled || widget.child == null) && _busy && !_nextConsumed) {
+      _abortProgressFlow(_progressRunId);
     }
     _syncSizeState(oldWidget);
     if (oldWidget.child != widget.child ||
@@ -311,9 +391,23 @@ class _AwesomeButtonState extends State<AwesomeButton>
     _widthController.dispose();
     _heightController.dispose();
     _debounceResetTimer?.cancel();
+    _longPressTimer?.cancel();
     _delayedWidthAnimationTimer?.cancel();
     _stopTextTransition();
     super.dispose();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final nextReduceMotion = MediaQuery.maybeOf(context)?.disableAnimations ??
+        WidgetsBinding.instance.platformDispatcher.accessibilityFeatures
+            .disableAnimations;
+    if (_reduceMotion == nextReduceMotion) {
+      return;
+    }
+    _reduceMotion = nextReduceMotion;
+    _settleForMotionPolicy();
   }
 
   bool get _hasContent => widget.child != null;
@@ -336,7 +430,7 @@ class _AwesomeButtonState extends State<AwesomeButton>
       return _ButtonWidthMode.stretch;
     }
 
-    if (widget.width != null) {
+    if (_normalizedOptionalDimension(widget.width) != null) {
       return _ButtonWidthMode.fixed;
     }
 
@@ -350,8 +444,7 @@ class _AwesomeButtonState extends State<AwesomeButton>
         text != null &&
         text.isNotEmpty &&
         widget.before == null &&
-        widget.after == null &&
-        widget.extra == null;
+        widget.after == null;
   }
 
   bool get _canChoreographAutoWidthText =>
@@ -360,8 +453,7 @@ class _AwesomeButtonState extends State<AwesomeButton>
   String? _autoWidthMeasurementTextFor(AwesomeButton widget) {
     if (_widthModeFor(widget) != _ButtonWidthMode.auto ||
         widget.before != null ||
-        widget.after != null ||
-        widget.extra != null) {
+        widget.after != null) {
       return null;
     }
 
@@ -401,12 +493,15 @@ class _AwesomeButtonState extends State<AwesomeButton>
   }
 
   EdgeInsets get _contentPadding {
-    final horizontal = widget.paddingHorizontal ?? _defaultHorizontalPadding;
+    final horizontal = _normalizedOptionalDimension(widget.paddingHorizontal) ??
+        _defaultHorizontalPadding;
     return EdgeInsets.fromLTRB(
       horizontal,
-      widget.paddingTop ?? _defaultVerticalPadding,
+      _normalizedOptionalDimension(widget.paddingTop) ??
+          _defaultVerticalPadding,
       horizontal,
-      widget.paddingBottom ?? _defaultVerticalPadding,
+      _normalizedOptionalDimension(widget.paddingBottom) ??
+          _defaultVerticalPadding,
     );
   }
 
@@ -414,19 +509,61 @@ class _AwesomeButtonState extends State<AwesomeButton>
     if (event.buttons != kPrimaryButton || !_canStartGesture || _pressArmed) {
       return;
     }
+    _gestureId += 1;
+    final gestureId = _gestureId;
     _pressArmed = true;
+    _longPressArmed = widget.onLongPress != null;
+    _longPressDisarmed = !_longPressArmed;
+    _longPressDispatched = false;
     widget.onPressIn?.call();
+
+    if (!mounted ||
+        gestureId != _gestureId ||
+        !_pressArmed ||
+        !_canStartGesture) {
+      _cancelPhysicalGesture(notifyPressOut: mounted);
+      return;
+    }
+
     widget.onPressedIn?.call();
+
+    if (!mounted ||
+        gestureId != _gestureId ||
+        !_pressArmed ||
+        !_canStartGesture) {
+      _cancelPhysicalGesture(notifyPressOut: mounted);
+      return;
+    }
+
     _animatePressIn();
+    if (_longPressArmed) {
+      _longPressTimer?.cancel();
+      _longPressTimer = Timer(kLongPressTimeout, () {
+        _longPressTimer = null;
+        if (!mounted ||
+            gestureId != _gestureId ||
+            !_pressArmed ||
+            !_longPressArmed ||
+            _longPressDisarmed ||
+            !_canStartGesture) {
+          return;
+        }
+        final callback = widget.onLongPress;
+        if (callback == null) {
+          _disarmLongPress();
+          return;
+        }
+        _longPressDispatched = true;
+        callback();
+      });
+    }
   }
 
   void _handleTapCancel() {
     if (!_pressArmed || _busy) {
       return;
     }
-    _pressArmed = false;
-    _notifyPressOut();
-    _releasePressedState();
+    _cancelPhysicalGesture(notifyPressOut: true);
   }
 
   void _handleTap() {
@@ -434,63 +571,99 @@ class _AwesomeButtonState extends State<AwesomeButton>
       return;
     }
 
+    final wasLongPress = _longPressDispatched;
+    final onPressOutSnapshot = widget.onPressOut;
+    final onPressedOutSnapshot = widget.onPressedOut;
     _pressArmed = false;
-    _notifyPressOut();
+    _longPressTimer?.cancel();
+    _longPressTimer = null;
+    _longPressArmed = false;
+    onPressOutSnapshot?.call();
+
+    if (!mounted) {
+      return;
+    }
+
+    if (wasLongPress) {
+      _releasePressedState(onPressedOutSnapshot);
+      return;
+    }
 
     if (!_canDispatchTap) {
-      _releasePressedState();
+      _releasePressedState(onPressedOutSnapshot);
       return;
     }
 
     if (!_consumeDebouncedPressWindow()) {
-      _releasePressedState();
+      _releasePressedState(onPressedOutSnapshot);
       return;
     }
 
     if (widget.progress) {
-      _startProgressFlow();
+      _startProgressFlow(physicalLifecycle: true);
       return;
     }
 
     widget.onPress?.call(null);
-    _releasePressedState();
+    if (!mounted) {
+      return;
+    }
+    _releasePressedState(onPressedOutSnapshot);
   }
 
-  Future<void> _handleKeyboardActivate() async {
+  void _handleAtomicActivate() {
     if (!_canDispatchTap) {
       return;
     }
 
-    widget.onPressIn?.call();
-    widget.onPressedIn?.call();
-    await _animatePressIn();
-
-    if (!mounted || widget.disabled || _busy) {
-      return;
-    }
-
-    _notifyPressOut();
-
     if (!_consumeDebouncedPressWindow()) {
-      await _releasePressedState();
       return;
     }
 
     if (widget.progress) {
-      _startProgressFlow();
+      _startProgressFlow(physicalLifecycle: false);
       return;
     }
 
     widget.onPress?.call(null);
-    await _releasePressedState();
   }
 
-  void _notifyPressOut() {
-    widget.onPressOut?.call();
+  void _handleAtomicLongPress() {
+    if (!_semanticsEnabled) {
+      return;
+    }
+    widget.onLongPress?.call();
+  }
+
+  void _disarmLongPress() {
+    _longPressArmed = false;
+    _longPressDisarmed = true;
+    _longPressTimer?.cancel();
+    _longPressTimer = null;
+  }
+
+  void _cancelPhysicalGesture({required bool notifyPressOut}) {
+    if (!_pressArmed) {
+      return;
+    }
+    final onPressOutSnapshot = widget.onPressOut;
+    final onPressedOutSnapshot = widget.onPressedOut;
+    _pressArmed = false;
+    _gestureId += 1;
+    _disarmLongPress();
+    _longPressDispatched = false;
+    if (notifyPressOut) {
+      onPressOutSnapshot?.call();
+    }
+    if (!mounted) {
+      return;
+    }
+    _releasePressedState(onPressedOutSnapshot);
   }
 
   bool _consumeDebouncedPressWindow() {
-    if (widget.debouncedPressTime <= Duration.zero) {
+    final duration = _normalizedDuration(widget.debouncedPressTime);
+    if (duration <= Duration.zero) {
       return true;
     }
 
@@ -500,7 +673,7 @@ class _AwesomeButtonState extends State<AwesomeButton>
 
     _debounceActive = true;
     _debounceResetTimer?.cancel();
-    _debounceResetTimer = Timer(widget.debouncedPressTime, () {
+    _debounceResetTimer = Timer(duration, () {
       _debounceActive = false;
     });
     return true;
@@ -542,6 +715,7 @@ class _AwesomeButtonState extends State<AwesomeButton>
     final currentWidth = _currentWidthSnapshot;
 
     if (widget.animateSize == false ||
+        _reduceMotion ||
         currentWidth == null ||
         (currentWidth - nextWidth).abs() < 0.5) {
       _setWidthImmediately(nextWidth);
@@ -596,6 +770,7 @@ class _AwesomeButtonState extends State<AwesomeButton>
     final currentHeight = _currentHeightSnapshot;
 
     if (widget.animateSize == false ||
+        _reduceMotion ||
         (currentHeight - nextHeight).abs() < 0.5) {
       _setHeightImmediately(nextHeight);
       return;
@@ -639,20 +814,20 @@ class _AwesomeButtonState extends State<AwesomeButton>
       _clearMeasurementRequest();
 
       if (nextWidthMode == _ButtonWidthMode.fixed) {
-        _setWidthImmediately(widget.width);
+        _setWidthImmediately(_normalizedOptionalDimension(widget.width));
       } else {
         _setWidthImmediately(null);
       }
     } else if (nextWidthMode == _ButtonWidthMode.fixed &&
-        widget.width != null &&
+        _normalizedOptionalDimension(widget.width) != null &&
         (oldWidget.width != widget.width ||
             oldWidget.animateSize != widget.animateSize)) {
-      _animateWidthTo(widget.width!);
+      _animateWidthTo(_normalizedOptionalDimension(widget.width)!);
     }
 
     if (oldWidget.height != widget.height ||
         oldWidget.animateSize != widget.animateSize) {
-      _animateHeightTo(widget.height);
+      _animateHeightTo(_normalizedRequiredDimension(widget.height, 52));
     }
   }
 
@@ -695,6 +870,7 @@ class _AwesomeButtonState extends State<AwesomeButton>
     _stopTextTransition();
 
     if (widget.textTransition == false ||
+        _reduceMotion ||
         targetText == null ||
         targetText.isEmpty ||
         _displayedText == null ||
@@ -916,6 +1092,11 @@ class _AwesomeButtonState extends State<AwesomeButton>
   }
 
   void _animateProgressSwapIn() {
+    if (_reduceMotion) {
+      _contentTransitionController.value = 0;
+      _activityTransitionController.value = 1;
+      return;
+    }
     _contentTransitionController
       ..stop()
       ..animateTo(
@@ -933,6 +1114,12 @@ class _AwesomeButtonState extends State<AwesomeButton>
   }
 
   Future<void> _animateProgressSwapOut() async {
+    if (_reduceMotion) {
+      _contentTransitionController.value = 1;
+      _activityTransitionController.value = 0;
+      _progressOverlayOpacityController.value = 0;
+      return;
+    }
     try {
       await Future.wait<void>([
         _contentTransitionController.animateTo(
@@ -973,44 +1160,78 @@ class _AwesomeButtonState extends State<AwesomeButton>
     }
   }
 
-  void _startProgressFlow() {
+  void _startProgressFlow({required bool physicalLifecycle}) {
     if (_busy || widget.onPress == null) {
       return;
     }
 
+    _progressRunId += 1;
+    final runId = _progressRunId;
     setState(() {
       _busy = true;
       _nextConsumed = false;
+      _progressHasPhysicalLifecycle = physicalLifecycle;
       _showProgressVisuals = true;
     });
 
+    if (!physicalLifecycle) {
+      _pressController.value = 0;
+    }
+
     _resetProgressVisualState(unmount: false);
-    _progressController.duration = widget.progressLoadingTime;
-    _progressOverlayOpacityController.value = 1;
+    _progressController.duration =
+        _normalizedDuration(widget.progressLoadingTime);
+    _progressOverlayOpacityController.value = widget.showProgressBar ? 1 : 0;
 
     widget.onProgressStart?.call();
+    if (!mounted || !_busy || runId != _progressRunId) {
+      return;
+    }
     _animateProgressSwapIn();
-    _progressController.forward();
+    if (_reduceMotion) {
+      _progressController.value = widget.showProgressBar ? 1 : 0;
+    } else {
+      _progressController.forward();
+    }
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || !_busy) {
+      if (!mounted || !_busy || runId != _progressRunId) {
         return;
       }
-      widget.onPress?.call(_handleProgressNext);
+      final onPress = widget.onPress;
+      if (onPress == null || widget.disabled || widget.child == null) {
+        _abortProgressFlow(runId);
+        return;
+      }
+      onPress(([callback]) => _handleProgressNext(runId, callback));
     });
   }
 
-  void _handleProgressNext([VoidCallback? callback]) {
-    if (_nextConsumed || !_busy) {
+  void _handleProgressNext(int runId, [VoidCallback? callback]) {
+    if (_nextConsumed || !_busy || runId != _progressRunId) {
       return;
     }
     _nextConsumed = true;
-    _completeProgressFlow(callback);
+    final onProgressEndSnapshot = widget.onProgressEnd;
+    Future<void>.microtask(
+      () => _completeProgressFlow(
+        runId,
+        callback,
+        onProgressEndSnapshot,
+      ),
+    );
   }
 
-  Future<void> _completeProgressFlow([VoidCallback? callback]) async {
+  Future<void> _completeProgressFlow(
+    int runId,
+    VoidCallback? callback,
+    VoidCallback? onProgressEndSnapshot,
+  ) async {
+    if (!mounted || !_busy || runId != _progressRunId) {
+      return;
+    }
     try {
-      if (_progressController.value < 1) {
+      if (!_reduceMotion && _progressController.value < 1) {
         await _progressController.animateTo(
           1,
           duration: _progressFillCompletionDuration,
@@ -1021,19 +1242,24 @@ class _AwesomeButtonState extends State<AwesomeButton>
       return;
     }
 
-    if (!mounted) {
+    if (!mounted || !_busy || runId != _progressRunId) {
       return;
     }
 
     await _animateProgressSwapOut();
 
-    if (!mounted) {
+    if (!mounted || !_busy || runId != _progressRunId) {
       return;
     }
 
-    await _releasePressedState();
+    if (_progressHasPhysicalLifecycle) {
+      final onPressedOutSnapshot = widget.onPressedOut;
+      await _releasePressedState(onPressedOutSnapshot);
+    } else {
+      _pressController.value = 0;
+    }
 
-    if (!mounted) {
+    if (!mounted || !_busy || runId != _progressRunId) {
       return;
     }
 
@@ -1043,11 +1269,56 @@ class _AwesomeButtonState extends State<AwesomeButton>
     });
     _resetProgressVisualState(unmount: false);
     callback?.call();
-    widget.onProgressEnd?.call();
+    if (!mounted) {
+      return;
+    }
+    onProgressEndSnapshot?.call();
+  }
+
+  void _abortProgressFlow(int runId) {
+    if (!mounted || !_busy || _nextConsumed || runId != _progressRunId) {
+      return;
+    }
+    _nextConsumed = true;
+    final onProgressEndSnapshot = widget.onProgressEnd;
+    _progressController.stop();
+    _contentTransitionController.stop();
+    _activityTransitionController.stop();
+    _progressOverlayOpacityController.stop();
+    unawaited(
+      _finishProgressRollback(
+        runId,
+        onProgressEndSnapshot,
+      ),
+    );
+  }
+
+  Future<void> _finishProgressRollback(
+    int runId,
+    VoidCallback? onProgressEndSnapshot,
+  ) async {
+    if (_progressHasPhysicalLifecycle) {
+      await _releasePressedState(widget.onPressedOut);
+    } else {
+      _pressController.value = 0;
+    }
+    if (!mounted || !_busy || runId != _progressRunId) {
+      return;
+    }
+    setState(() {
+      _busy = false;
+      _showProgressVisuals = false;
+    });
+    _resetProgressVisualState();
+    onProgressEndSnapshot?.call();
   }
 
   Future<void> _animatePressIn() async {
     _pressController.stop();
+    if (_reduceMotion || _pressAnimationDuration == Duration.zero) {
+      _pressController.value = 1;
+      return;
+    }
     try {
       await _pressController.animateTo(
         1,
@@ -1063,8 +1334,19 @@ class _AwesomeButtonState extends State<AwesomeButton>
     }
   }
 
-  Future<void> _releasePressedState() async {
+  Future<void> _releasePressedState(
+      [VoidCallback? onPressedOutSnapshot]) async {
+    if (_releaseInProgress) {
+      return;
+    }
+    _releaseInProgress = true;
+    _releaseCompletionSnapshot = onPressedOutSnapshot;
     _pressController.stop();
+    if (_reduceMotion) {
+      _pressController.value = 0;
+      _finishRelease();
+      return;
+    }
     try {
       await _pressController.animateWith(
         SpringSimulation(
@@ -1075,6 +1357,8 @@ class _AwesomeButtonState extends State<AwesomeButton>
         ),
       );
     } on TickerCanceled {
+      _releaseInProgress = false;
+      _releaseCompletionSnapshot = null;
       return;
     }
 
@@ -1083,206 +1367,299 @@ class _AwesomeButtonState extends State<AwesomeButton>
     }
 
     _pressController.value = 0;
-    widget.onPressedOut?.call();
+    _finishRelease();
+  }
+
+  void _finishRelease() {
+    if (!_releaseInProgress || !mounted) {
+      return;
+    }
+    final callback = _releaseCompletionSnapshot;
+    _releaseInProgress = false;
+    _releaseCompletionSnapshot = null;
+    callback?.call();
+  }
+
+  void _settleForMotionPolicy() {
+    if (!_reduceMotion) {
+      return;
+    }
+    _pressController.stop();
+    _contentTransitionController.stop();
+    _activityTransitionController.stop();
+    _progressController.stop();
+    _progressOverlayOpacityController.stop();
+    if (_busy) {
+      _pressController.value = 1;
+      _contentTransitionController.value = 0;
+      _activityTransitionController.value = 1;
+      _progressController.value = widget.showProgressBar ? 1 : 0;
+      _progressOverlayOpacityController.value = widget.showProgressBar ? 1 : 0;
+    } else if (_pressArmed) {
+      _pressController.value = 1;
+    } else {
+      _pressController.value = 0;
+    }
+    if (_releaseInProgress) {
+      _finishRelease();
+    }
+    _stopTextTransition();
+    _updateDisplayedText(_currentTextTarget);
   }
 
   @override
   Widget build(BuildContext context) {
-    final resolvedStyle = _resolveStyle(context);
-    _pressAnimationDuration = resolvedStyle.animationDuration;
-    _pressAnimationCurve = resolvedStyle.animationCurve;
-    final direction = Directionality.of(context);
-    final borderRadius = resolvedStyle.borderRadius.resolve(direction);
-    final shell = AnimatedBuilder(
-      animation: Listenable.merge([
-        _pressController,
-        _progressController,
-        _contentTransitionController,
-        _activityTransitionController,
-        _progressOverlayOpacityController,
-        _widthController,
-        _heightController,
-      ]),
-      builder: (context, child) {
-        final visualHeight = _currentHeightSnapshot;
-        final totalHeight = visualHeight + resolvedStyle.raiseAmount;
-        final shadowHeight =
-            math.max(0.0, visualHeight - resolvedStyle.raiseAmount);
-        final shellWidth = switch (_widthMode) {
-          _ButtonWidthMode.stretch => double.infinity,
-          _ButtonWidthMode.fixed => _currentWidthSnapshot,
-          _ButtonWidthMode.auto => _currentWidthSnapshot,
-        };
-        final stretchFace = widget.stretch || shellWidth != null;
-        final pressValue = _pressController.value;
-        final clampedPressValue = pressValue.clamp(0.0, 1.0);
-        final faceOffset = resolvedStyle.raiseAmount * pressValue;
-        final pressedOpacity = widget.progress
-            ? 1.0
-            : 1 - ((1 - widget.activeOpacity) * clampedPressValue);
-        final visual = Stack(
-          clipBehavior: Clip.none,
-          children: [
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: -(resolvedStyle.raiseAmount / 2),
-              child: Transform.translate(
-                offset: Offset(
-                  0,
-                  -(resolvedStyle.raiseAmount / 2) * pressValue,
-                ),
-                child: Align(
-                  alignment: Alignment.center,
-                  child: FractionallySizedBox(
-                    widthFactor: _shadowWidthFactor,
-                    child: _ButtonShadowLayer(
-                      height: shadowHeight,
-                      backgroundColor: resolvedStyle.shadowColor,
-                      borderRadius: borderRadius,
+    final targetResolvedStyle = _resolveStyle(context);
+    _pressAnimationDuration = _normalizedOptionalDuration(
+          widget.pressInAnimationDuration ??
+              widget.style?.pressInAnimationDuration,
+        ) ??
+        targetResolvedStyle.animationDuration;
+    _pressAnimationCurve = targetResolvedStyle.animationCurve;
+    final styleFramesArePreInterpolated =
+        AwesomeButtonStyleFrameScope.framesArePreInterpolatedOf(context);
+
+    return TweenAnimationBuilder<_ResolvedAwesomeButtonStyle>(
+      tween: _ResolvedAwesomeButtonStyleTween(end: targetResolvedStyle),
+      duration: _reduceMotion || styleFramesArePreInterpolated
+          ? Duration.zero
+          : targetResolvedStyle.animationDuration,
+      curve: targetResolvedStyle.animationCurve,
+      builder: (context, resolvedStyle, child) {
+        final direction = Directionality.of(context);
+        final borderRadius = _normalizedBorderRadius(
+          resolvedStyle.borderRadius.resolve(direction),
+        );
+        final shell = AnimatedBuilder(
+          animation: Listenable.merge([
+            _pressController,
+            _progressController,
+            _contentTransitionController,
+            _activityTransitionController,
+            _progressOverlayOpacityController,
+            _widthController,
+            _heightController,
+          ]),
+          builder: (context, child) {
+            final textScale = MediaQuery.textScalerOf(context).scale(1);
+            final textGrowthHeight = widget.child is String
+                ? resolvedStyle.textLineHeight * textScale +
+                    _contentPadding.vertical +
+                    (resolvedStyle.borderWidth * 2)
+                : 0.0;
+            final visualHeight =
+                math.max(_currentHeightSnapshot, textGrowthHeight);
+            final totalHeight = visualHeight + resolvedStyle.raiseAmount;
+            final shadowHeight =
+                math.max(0.0, visualHeight - resolvedStyle.raiseAmount);
+            final shellWidth = switch (_widthMode) {
+              _ButtonWidthMode.stretch => double.infinity,
+              _ButtonWidthMode.fixed => _currentWidthSnapshot,
+              _ButtonWidthMode.auto => _currentWidthSnapshot,
+            };
+            final stretchFace = widget.stretch || shellWidth != null;
+            final pressValue = _pressController.value;
+            final clampedPressValue = pressValue.clamp(0.0, 1.0);
+            final faceOffset = resolvedStyle.raiseAmount * pressValue;
+            final pressedOpacity = widget.progress
+                ? 1.0
+                : 1 -
+                    ((1 - _normalizedOpacity(widget.activeOpacity, 1)) *
+                        clampedPressValue);
+            final visual = Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: -(resolvedStyle.raiseAmount / 2),
+                  child: Transform.translate(
+                    offset: Offset(
+                      0,
+                      -(resolvedStyle.raiseAmount / 2) * pressValue,
+                    ),
+                    child: Align(
+                      alignment: Alignment.center,
+                      child: FractionallySizedBox(
+                        widthFactor: _shadowWidthFactor,
+                        child: _ButtonShadowLayer(
+                          height: shadowHeight,
+                          backgroundColor: resolvedStyle.shadowColor,
+                          borderRadius: borderRadius,
+                        ),
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ),
-            Positioned.fill(
-              child: Padding(
-                padding: EdgeInsets.only(top: resolvedStyle.raiseAmount),
-                child: _ButtonBottomLayer(
-                  height: visualHeight,
-                  backgroundColor: resolvedStyle.depthColor,
-                  borderRadius: borderRadius,
-                  borderColor: resolvedStyle.borderColor,
-                  borderWidth: resolvedStyle.borderWidth,
-                  stretch: true,
+                Positioned.fill(
+                  child: Padding(
+                    padding: EdgeInsets.only(top: resolvedStyle.raiseAmount),
+                    child: _ButtonBottomLayer(
+                      height: visualHeight,
+                      backgroundColor: resolvedStyle.depthColor,
+                      borderRadius: borderRadius,
+                      borderColor: resolvedStyle.borderColor,
+                      borderWidth: resolvedStyle.borderWidth,
+                      stretch: true,
+                    ),
+                  ),
                 ),
+                Transform.translate(
+                  offset: Offset(0, faceOffset),
+                  child: _ButtonFaceLayer(
+                    stretch: stretchFace,
+                    height: visualHeight,
+                    padding: _contentPadding,
+                    borderRadius: borderRadius,
+                    backgroundColor: resolvedStyle.backgroundColor,
+                    borderColor: resolvedStyle.borderColor,
+                    borderWidth: resolvedStyle.borderWidth,
+                    foregroundColor: resolvedStyle.foregroundColor,
+                    activeBackgroundColor: resolvedStyle.activeBackgroundColor,
+                    activeBackgroundOpacity:
+                        widget.showProgressBar || !_showProgressVisuals
+                            ? clampedPressValue
+                            : 0,
+                    hoverOverlayColor: _hoverFocusOverlayColor(
+                      resolvedStyle.pressedOverlayColor,
+                    ),
+                    before: widget.before,
+                    after: widget.after,
+                    extra: widget.extra,
+                    contentGap: resolvedStyle.contentGap,
+                    backgroundPlaceholderColor:
+                        resolvedStyle.backgroundPlaceholderColor,
+                    progressFillColor: resolvedStyle.progressFillColor,
+                    activityColor: resolvedStyle.activityColor,
+                    progressValue: _progressController.value,
+                    progressOverlayOpacity:
+                        _progressOverlayOpacityController.value,
+                    contentTransitionValue: _contentTransitionController.value,
+                    activityTransitionValue:
+                        _activityTransitionController.value,
+                    showProgressVisuals: _showProgressVisuals,
+                    showProgressBar: widget.showProgressBar,
+                    animatedPlaceholder:
+                        widget.animatedPlaceholder && !_reduceMotion,
+                    textSize: resolvedStyle.textSize,
+                    textLineHeight: resolvedStyle.textLineHeight,
+                    textFontFamily: resolvedStyle.textFontFamily,
+                    child: widget.child,
+                    displayedText: _displayedText,
+                  ),
+                ),
+              ],
+            );
+
+            return SizedBox(
+              key: const ValueKey<String>('aws-btn-shell'),
+              width: shellWidth,
+              height: totalHeight,
+              child: Opacity(
+                key: const ValueKey<String>('aws-btn-pressed-opacity'),
+                opacity: pressedOpacity.clamp(0.0, 1.0),
+                child: visual,
               ),
-            ),
-            Transform.translate(
-              offset: Offset(0, faceOffset),
-              child: _ButtonFaceLayer(
-                stretch: stretchFace,
-                height: visualHeight,
+            );
+          },
+        );
+        final measurementText = _measurementText;
+        final measurementRequestId = _measurementRequestId;
+        final interactiveChild = Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            shell,
+            if (measurementText != null && measurementRequestId != null)
+              _AutoWidthMeasurementProbe(
+                requestId: measurementRequestId,
+                text: measurementText,
                 padding: _contentPadding,
-                borderRadius: borderRadius,
-                backgroundColor: resolvedStyle.backgroundColor,
-                borderColor: resolvedStyle.borderColor,
                 borderWidth: resolvedStyle.borderWidth,
                 foregroundColor: resolvedStyle.foregroundColor,
-                activeBackgroundColor: resolvedStyle.activeBackgroundColor,
-                activeBackgroundOpacity:
-                    widget.showProgressBar || !_showProgressVisuals
-                        ? clampedPressValue
-                        : 0,
-                hoverOverlayColor: _hoverFocusOverlayColor(
-                  resolvedStyle.pressedOverlayColor,
-                ),
-                before: widget.before,
-                after: widget.after,
-                extra: widget.extra,
-                contentGap: resolvedStyle.contentGap,
-                backgroundPlaceholderColor:
-                    resolvedStyle.backgroundPlaceholderColor,
-                progressFillColor: resolvedStyle.progressFillColor,
-                activityColor: resolvedStyle.activityColor,
-                progressValue: _progressController.value,
-                progressOverlayOpacity: _progressOverlayOpacityController.value,
-                contentTransitionValue: _contentTransitionController.value,
-                activityTransitionValue: _activityTransitionController.value,
-                showProgressVisuals: _showProgressVisuals,
-                showProgressBar: widget.showProgressBar,
-                animatedPlaceholder: widget.animatedPlaceholder,
                 textSize: resolvedStyle.textSize,
                 textLineHeight: resolvedStyle.textLineHeight,
                 textFontFamily: resolvedStyle.textFontFamily,
-                child: widget.child,
-                displayedText: _displayedText,
+                onMeasured: _handleAutoWidthMeasured,
               ),
-            ),
           ],
         );
 
-        return SizedBox(
-          key: const ValueKey<String>('aws-btn-shell'),
-          width: shellWidth,
-          height: totalHeight,
-          child: Opacity(
-            key: const ValueKey<String>('aws-btn-pressed-opacity'),
-            opacity: pressedOpacity.clamp(0.0, 1.0),
-            child: visual,
+        final minimumTarget =
+            Theme.of(context).platform == TargetPlatform.android ? 48.0 : 44.0;
+        final inferredLabel =
+            widget.child is String ? widget.child! as String : null;
+        final labeledLongAction = widget.accessibilityLongPressLabel != null &&
+                _semanticsEnabled &&
+                widget.onLongPress != null
+            ? <CustomSemanticsAction, VoidCallback>{
+                CustomSemanticsAction(
+                  label: widget.accessibilityLongPressLabel!,
+                ): _handleAtomicLongPress,
+              }
+            : null;
+
+        return Semantics(
+          button: true,
+          container: true,
+          excludeSemantics: true,
+          enabled: _semanticsEnabled,
+          focusable: _semanticsEnabled,
+          label: widget.accessibilityLabel ?? inferredLabel,
+          hint: widget.accessibilityHint,
+          liveRegion: _busy,
+          customSemanticsActions: labeledLongAction,
+          onTap: _canDispatchTap ? _handleAtomicActivate : null,
+          onLongPress: labeledLongAction == null &&
+                  _semanticsEnabled &&
+                  widget.onLongPress != null
+              ? _handleAtomicLongPress
+              : null,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minWidth: minimumTarget,
+              minHeight: minimumTarget,
+            ),
+            child: FocusableActionDetector(
+              enabled: _hasContent && !widget.disabled && !_busy,
+              autofocus: widget.autofocus,
+              focusNode: widget.focusNode,
+              onShowFocusHighlight: (value) {
+                if (_focused == value) {
+                  return;
+                }
+                setState(() => _focused = value);
+              },
+              onShowHoverHighlight: (value) {
+                if (_hovered == value) {
+                  return;
+                }
+                setState(() => _hovered = value);
+              },
+              actions: <Type, Action<Intent>>{
+                ActivateIntent: CallbackAction<ActivateIntent>(
+                  onInvoke: (intent) {
+                    _handleAtomicActivate();
+                    return null;
+                  },
+                ),
+              },
+              child: Listener(
+                behavior: HitTestBehavior.opaque,
+                onPointerDown: _canStartGesture ? _handlePointerDown : null,
+                onPointerCancel:
+                    _canStartGesture ? (_) => _handleTapCancel() : null,
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  excludeFromSemantics: true,
+                  onTapCancel: _canStartGesture ? _handleTapCancel : null,
+                  onTap: _canStartGesture ? _handleTap : null,
+                  child: interactiveChild,
+                ),
+              ),
+            ),
           ),
         );
       },
-    );
-    final measurementText = _measurementText;
-    final measurementRequestId = _measurementRequestId;
-    final interactiveChild = Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        shell,
-        if (measurementText != null && measurementRequestId != null)
-          _AutoWidthMeasurementProbe(
-            requestId: measurementRequestId,
-            text: measurementText,
-            padding: _contentPadding,
-            borderWidth: resolvedStyle.borderWidth,
-            foregroundColor: resolvedStyle.foregroundColor,
-            textSize: resolvedStyle.textSize,
-            textLineHeight: resolvedStyle.textLineHeight,
-            textFontFamily: resolvedStyle.textFontFamily,
-            onMeasured: _handleAutoWidthMeasured,
-          ),
-      ],
-    );
-
-    return Semantics(
-      button: true,
-      enabled: _semanticsEnabled,
-      value: _busy ? 'Busy' : null,
-      onTap: _canDispatchTap ? _handleKeyboardActivate : null,
-      onLongPress: _canStartGesture && widget.onLongPress != null
-          ? widget.onLongPress
-          : null,
-      child: FocusableActionDetector(
-        enabled: _hasContent && !widget.disabled,
-        autofocus: widget.autofocus,
-        focusNode: widget.focusNode,
-        onShowFocusHighlight: (value) {
-          if (_focused == value) {
-            return;
-          }
-          setState(() => _focused = value);
-        },
-        onShowHoverHighlight: (value) {
-          if (_hovered == value) {
-            return;
-          }
-          setState(() => _hovered = value);
-        },
-        actions: <Type, Action<Intent>>{
-          ActivateIntent: CallbackAction<ActivateIntent>(
-            onInvoke: (intent) {
-              _handleKeyboardActivate();
-              return null;
-            },
-          ),
-        },
-        child: Listener(
-          behavior: HitTestBehavior.opaque,
-          onPointerDown: _canStartGesture ? _handlePointerDown : null,
-          onPointerCancel: _canStartGesture ? (_) => _handleTapCancel() : null,
-          child: GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            excludeFromSemantics: true,
-            onTapCancel: _canStartGesture ? _handleTapCancel : null,
-            onTap: _canStartGesture ? _handleTap : null,
-            onLongPress: _canStartGesture && widget.onLongPress != null
-                ? widget.onLongPress
-                : null,
-            child: interactiveChild,
-          ),
-        ),
-      ),
     );
   }
 
@@ -1335,17 +1712,32 @@ class _AwesomeButtonState extends State<AwesomeButton>
       shadowColor: shadowColor,
       pressedOverlayColor: pressedOverlayColor,
       foregroundColor: foregroundColor,
-      textSize: mergedStyle.textSize ?? fallbackStyle.textSize!,
-      textLineHeight:
-          mergedStyle.textLineHeight ?? fallbackStyle.textLineHeight!,
+      textSize: _normalizedRequiredDimension(
+        mergedStyle.textSize ?? fallbackStyle.textSize!,
+        fallbackStyle.textSize!,
+      ),
+      textLineHeight: _normalizedRequiredDimension(
+        mergedStyle.textLineHeight ?? fallbackStyle.textLineHeight!,
+        fallbackStyle.textLineHeight!,
+      ),
       textFontFamily: mergedStyle.textFontFamily,
       borderRadius: mergedStyle.borderRadius ?? fallbackStyle.borderRadius!,
-      borderWidth: mergedStyle.borderWidth ?? fallbackStyle.borderWidth!,
+      borderWidth: _normalizedRequiredDimension(
+        mergedStyle.borderWidth ?? fallbackStyle.borderWidth!,
+        fallbackStyle.borderWidth!,
+      ),
       borderColor: borderColor,
-      raiseAmount: mergedStyle.raiseAmount ?? fallbackStyle.raiseAmount!,
-      contentGap: mergedStyle.contentGap ?? fallbackStyle.contentGap!,
-      animationDuration:
-          mergedStyle.animationDuration ?? fallbackStyle.animationDuration!,
+      raiseAmount: _normalizedRequiredDimension(
+        mergedStyle.raiseAmount ?? fallbackStyle.raiseAmount!,
+        fallbackStyle.raiseAmount!,
+      ),
+      contentGap: _normalizedRequiredDimension(
+        mergedStyle.contentGap ?? fallbackStyle.contentGap!,
+        fallbackStyle.contentGap!,
+      ),
+      animationDuration: _normalizedDuration(
+        mergedStyle.animationDuration ?? fallbackStyle.animationDuration!,
+      ),
       animationCurve:
           mergedStyle.animationCurve ?? fallbackStyle.animationCurve!,
     );
@@ -1409,6 +1801,110 @@ class _ResolvedAwesomeButtonStyle {
   final double contentGap;
   final Duration animationDuration;
   final Curve animationCurve;
+
+  static _ResolvedAwesomeButtonStyle lerp(
+    _ResolvedAwesomeButtonStyle from,
+    _ResolvedAwesomeButtonStyle to,
+    double progress,
+  ) {
+    final t = progress.clamp(0.0, 1.0);
+    return _ResolvedAwesomeButtonStyle(
+      backgroundColor: Color.lerp(from.backgroundColor, to.backgroundColor, t)!,
+      activeBackgroundColor: Color.lerp(
+        from.activeBackgroundColor,
+        to.activeBackgroundColor,
+        t,
+      )!,
+      backgroundPlaceholderColor: Color.lerp(
+        from.backgroundPlaceholderColor,
+        to.backgroundPlaceholderColor,
+        t,
+      )!,
+      progressFillColor:
+          Color.lerp(from.progressFillColor, to.progressFillColor, t)!,
+      activityColor: Color.lerp(from.activityColor, to.activityColor, t)!,
+      depthColor: Color.lerp(from.depthColor, to.depthColor, t)!,
+      shadowColor: Color.lerp(from.shadowColor, to.shadowColor, t)!,
+      pressedOverlayColor: Color.lerp(
+        from.pressedOverlayColor,
+        to.pressedOverlayColor,
+        t,
+      )!,
+      foregroundColor: Color.lerp(from.foregroundColor, to.foregroundColor, t)!,
+      textSize: lerpDouble(from.textSize, to.textSize, t)!,
+      textLineHeight: lerpDouble(from.textLineHeight, to.textLineHeight, t)!,
+      textFontFamily: t < 1 ? from.textFontFamily : to.textFontFamily,
+      borderRadius: BorderRadiusGeometry.lerp(
+        from.borderRadius,
+        to.borderRadius,
+        t,
+      )!,
+      borderWidth: lerpDouble(from.borderWidth, to.borderWidth, t)!,
+      borderColor: Color.lerp(from.borderColor, to.borderColor, t)!,
+      raiseAmount: lerpDouble(from.raiseAmount, to.raiseAmount, t)!,
+      contentGap: lerpDouble(from.contentGap, to.contentGap, t)!,
+      animationDuration: to.animationDuration,
+      animationCurve: to.animationCurve,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is _ResolvedAwesomeButtonStyle &&
+          other.backgroundColor == backgroundColor &&
+          other.activeBackgroundColor == activeBackgroundColor &&
+          other.backgroundPlaceholderColor == backgroundPlaceholderColor &&
+          other.progressFillColor == progressFillColor &&
+          other.activityColor == activityColor &&
+          other.depthColor == depthColor &&
+          other.shadowColor == shadowColor &&
+          other.pressedOverlayColor == pressedOverlayColor &&
+          other.foregroundColor == foregroundColor &&
+          other.textSize == textSize &&
+          other.textLineHeight == textLineHeight &&
+          other.textFontFamily == textFontFamily &&
+          other.borderRadius == borderRadius &&
+          other.borderWidth == borderWidth &&
+          other.borderColor == borderColor &&
+          other.raiseAmount == raiseAmount &&
+          other.contentGap == contentGap &&
+          other.animationDuration == animationDuration &&
+          other.animationCurve == animationCurve;
+
+  @override
+  int get hashCode => Object.hashAll([
+        backgroundColor,
+        activeBackgroundColor,
+        backgroundPlaceholderColor,
+        progressFillColor,
+        activityColor,
+        depthColor,
+        shadowColor,
+        pressedOverlayColor,
+        foregroundColor,
+        textSize,
+        textLineHeight,
+        textFontFamily,
+        borderRadius,
+        borderWidth,
+        borderColor,
+        raiseAmount,
+        contentGap,
+        animationDuration,
+        animationCurve,
+      ]);
+}
+
+class _ResolvedAwesomeButtonStyleTween
+    extends Tween<_ResolvedAwesomeButtonStyle> {
+  _ResolvedAwesomeButtonStyleTween({required super.end});
+
+  @override
+  _ResolvedAwesomeButtonStyle lerp(double t) {
+    final target = end!;
+    return _ResolvedAwesomeButtonStyle.lerp(begin ?? target, target, t);
+  }
 }
 
 class _AutoWidthMeasurement {
@@ -1680,6 +2176,7 @@ class _ButtonFaceLayer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final direction = Directionality.of(context);
     final contentOpacity = contentTransitionValue.clamp(0.0, 1.0);
     final activityOpacity = activityTransitionValue.clamp(0.0, 1.0);
     final overlayOpacity = progressOverlayOpacity.clamp(0.0, 1.0);
@@ -1690,9 +2187,7 @@ class _ButtonFaceLayer extends StatelessWidget {
       final String text => Text(
           displayedText ?? text,
           key: const ValueKey<String>('aws-btn-content-text'),
-          maxLines: 1,
-          softWrap: false,
-          overflow: TextOverflow.clip,
+          softWrap: true,
           textAlign: TextAlign.center,
         ),
       final Widget widget => widget,
@@ -1746,7 +2241,8 @@ class _ButtonFaceLayer extends StatelessWidget {
                           opacity: overlayOpacity,
                           child: FractionalTranslation(
                             translation: Offset(
-                              progressValue.clamp(0.0, 1.0) - 1,
+                              (progressValue.clamp(0.0, 1.0) - 1) *
+                                  (direction == TextDirection.rtl ? -1 : 1),
                               0,
                             ),
                             child: DecoratedBox(

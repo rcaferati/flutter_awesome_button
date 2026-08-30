@@ -28,7 +28,7 @@ ThemeButtonStyle _flatStyle() {
 Map<ButtonVariant, ThemeButtonStyle> _createSocialTypes(
     ThemeButtonStyle common) {
   return {
-    ButtonVariant.twitter: common.merge(
+    ButtonVariant.x: common.merge(
       const ThemeButtonStyle(
         backgroundColor: Color(0xFF00ACED),
         backgroundDarker: Color(0xFF0096CF),

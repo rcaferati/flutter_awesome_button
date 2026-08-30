@@ -1,20 +1,20 @@
 .dart_tool/
-.flutter-plugins
-.flutter-plugins-dependencies
-.packages
+.github/
 .pub/
+api/
+architecture/
 build/
 coverage/
+doc/
 temp/
+test/
+tool/
 
-# IDE
-.idea/
-*.iml
-.vscode/
-
-# Generated example artifacts
 example/.dart_tool/
-example/.packages
 example/.flutter-plugins
 example/.flutter-plugins-dependencies
+example/.packages
 example/build/
+example/coverage/
+example/test/
+example/**/RunnerTests/

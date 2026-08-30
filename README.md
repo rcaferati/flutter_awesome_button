@@ -307,7 +307,8 @@ class TransparentExample extends StatelessWidget {
 - `danger`
 - `disabled`
 - `flat`
-- `twitter`
+- `x` (canonical alias)
+- `twitter` (deprecated compatibility enum value)
 - `messenger`
 - `facebook`
 - `github`
@@ -317,8 +318,11 @@ class TransparentExample extends StatelessWidget {
 - `pinterest`
 - `youtube`
 
-Unknown variants fall back safely at runtime instead of crashing, but only the
-variants above are part of the typed built-in API.
+Use `ButtonVariant.x` in new code. `ButtonVariant.twitter` remains a deprecated
+compatibility enum value with the same runtime identity, so existing exhaustive
+switches and serialized values retain their order and meaning.
+
+Unknown variants fall back safely at runtime instead of crashing.
 
 ### Sizes
 
@@ -348,7 +352,8 @@ The public prop surface is typed through `AwesomeButton` and `ThemedButton`.
 | `after` | `Widget?` | `null` | Content rendered after the main label inside the button face. |
 | `extra` | `Widget?` | `null` | Content rendered behind the active/content layers, useful for gradients and custom backgrounds. |
 | `stretch` | `bool` | `false` | Makes the button fill the available horizontal space. |
-| `style` | `AwesomeButtonStyle?` | `null` | Immutable visual override surface for colors, border, raise, animation, and typography. |
+| `style` | `AwesomeButtonStyle?` | `null` | Immutable visual override surface for colors, border, raise, animation, and typography. Its `animationDuration` owns direct resolved-style changes. |
+| `pressInAnimationDuration` | `Duration?` | `null` | Optional press-down override. When absent, `style.animationDuration` and then the 140 ms package fallback apply. |
 | `focusNode` | `FocusNode?` | `null` | Optional focus node for keyboard/focus control. |
 | `autofocus` | `bool` | `false` | Requests initial focus when the widget tree is built. |
 | `activeOpacity` | `double` | `1` | Opacity applied while the non-progress button is pressed. |
@@ -359,6 +364,9 @@ The public prop surface is typed through `AwesomeButton` and `ThemedButton`.
 | `animateSize` | `bool` | `true` | Animates fixed-size geometry changes and auto-width string-label changes. |
 | `textTransition` | `bool` | `false` | Enables the built-in scramble/reveal animation when a plain string label changes after mount. |
 | `animatedPlaceholder` | `bool` | `true` | Enables the shimmer loop when the button has no `child`. |
+| `accessibilityLabel` | `String?` | `null` | Spoken identity override; string content is inferred when absent. |
+| `accessibilityHint` | `String?` | `null` | Optional explanation for ordinary semantic activation. |
+| `accessibilityLongPressLabel` | `String?` | `null` | Optional name for semantic long activation. |
 | `onPressIn` | `VoidCallback?` | `null` | Observer callback fired when press-in begins. |
 | `onPressOut` | `VoidCallback?` | `null` | Observer callback fired when press-out begins. |
 | `onPressedIn` | `VoidCallback?` | `null` | Fires when the internal pressed state is armed. |
@@ -379,19 +387,67 @@ The public prop surface is typed through `AwesomeButton` and `ThemedButton`.
 | `transparent` | `bool` | `false` | Makes the visible shell layers transparent while keeping content, press, and progress feedback active. |
 | `autoWidth` | `bool` | `false` | Requests in-tree measured auto width instead of the size preset width. String labels can animate width changes. |
 
+## Interaction, Accessibility, and Motion
+
+Physical input uses one gesture owner. Callback replacements committed during
+a hold are live, removing a long handler disarms that gesture, and adding one
+takes effect on the next gesture. Atomic semantic and keyboard activation uses
+the same debounce and one-shot progress owner without fabricating a held
+press-in/press-out lifecycle, including during progress completion and rollback.
+`showProgressBar: false` removes only the face
+progress layer; the spinner, busy state, callback order, and completion handle
+remain active.
+
+The widget exposes one button semantics node. Disabled, busy, and placeholder
+states remove activation actions. Plain strings are inferred as the label;
+custom primary content should supply `accessibilityLabel`. Text scales and
+wraps, logical before/after order follows text direction, and the requested
+interaction footprint is at least 48 logical pixels on Android and 44 on
+Apple, web, and desktop hosts when parent constraints allow it.
+
+The active platform's Reduce Motion setting snaps press, release, direct-style,
+themed-style, size, text, placeholder, progress-swap, and progress-travel
+presentation. It does not alter debounce windows, long-press thresholds,
+callback ordering, or progress-handle ownership. A visible progress layer is
+static and full-face in this mode.
+
+Direct resolved-style changes use `style.animationDuration`. Same-theme
+variant changes are owned by the themed wrapper for 200 ms and are forwarded
+as already-interpolated frames, so the inner button does not animate them a
+second time. Theme-source and transparency changes snap.
+
+Numeric inputs are normalized before layout: non-finite optional values act as
+absent, non-finite required values use their declared defaults, negative
+geometry and durations clamp to zero, and opacity clamps to `[0, 1]`. A fixed
+width of zero stays an explicit constraint.
+
+The package continues to declare Android, iOS, web, macOS, Linux, and Windows.
+Package widget tests run on the host; TalkBack,
+Switch Access, VoiceOver, Switch Control, browser assistive technology, macOS
+VoiceOver, Windows Narrator, Linux Orca, keyboard, RTL, large-text, and Reduce
+Motion checks remain manual runtime evidence rather than demo UI tests.
+
 ## Development
 
 Primary package quality gates:
 
 ```bash
-flutter analyze
-flutter test
+tool/release-preflight.sh
 ```
 
-To validate the package page and publication metadata locally:
+The aggregate performs immutable dependency resolution, formatting, fatal
+analysis, package-owned tests with informational LCOV coverage, temporary
+Dartdoc link validation, the reviewed API-model comparison, and a pub dry run.
+It does not publish. See `CONTRIBUTING.md`, `tool/api/README.md`, and
+`PERFORMANCE.md` for the exact review and evidence policies.
+
+Individual iteration commands include:
 
 ```bash
-dart format --output=none --set-exit-if-changed .
+flutter analyze --fatal-infos --fatal-warnings
+flutter test
+tool/check-docs.sh
+tool/check-api-model.sh
 dart pub publish --dry-run
 ```
 

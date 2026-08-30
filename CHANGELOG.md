@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+- Hardened callback freshness, terminal cancellation, progress completion, accessibility, Reduced Motion, large-text, RTL, validation, and theme resolution without selecting a release version.
+- Added package-owned regressions and deterministic API, documentation, coverage, package-shape, and CI gates.
+- Recorded the one-time `0.9.1` semantic comparison in
+  `tool/api/0.9.1-to-current.md`: it reports no breaking declarations and
+  classifies the new motion, accessibility, and canonical `x` fields as
+  additive changes, with `twitter` retained as a deprecated alias.
+
 ## 0.9.1
 
 - Added API documentation across the public widget, theme, style, and helper

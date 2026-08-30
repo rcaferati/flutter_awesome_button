@@ -954,7 +954,7 @@ class _SocialScreen extends StatelessWidget {
                   name: themeName,
                   progress: true,
                   onPress: _handleTimeout,
-                  type: ButtonVariant.twitter,
+                  type: ButtonVariant.x,
                   width: 180,
                   style: const AwesomeButtonStyle(
                     borderRadius: BorderRadius.all(Radius.circular(8)),
@@ -964,7 +964,7 @@ class _SocialScreen extends StatelessWidget {
                     padding: EdgeInsets.only(right: 5),
                     child: Icon(AntDesign.twitter, size: 24),
                   ),
-                  child: 'Twitter',
+                  child: 'X',
                 ),
               ),
               _sectionButton(

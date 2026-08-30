@@ -2,6 +2,9 @@ import 'dart:ui' show lerpDouble;
 
 import 'package:flutter/material.dart';
 
+double? _finiteOrNull(double? value) =>
+    value != null && value.isFinite ? value : null;
+
 /// Visual configuration for [AwesomeButton].
 @immutable
 class AwesomeButtonStyle {
@@ -25,6 +28,7 @@ class AwesomeButtonStyle {
     this.raiseAmount,
     this.contentGap,
     this.animationDuration,
+    this.pressInAnimationDuration,
     this.animationCurve,
     this.disabledBackgroundColor,
     this.disabledDepthColor,
@@ -87,6 +91,9 @@ class AwesomeButtonStyle {
   /// Press-in animation duration.
   final Duration? animationDuration;
 
+  /// Optional press-down timing override.
+  final Duration? pressInAnimationDuration;
+
   /// Press-in animation curve.
   final Curve? animationCurve;
 
@@ -125,6 +132,7 @@ class AwesomeButtonStyle {
     double? raiseAmount,
     double? contentGap,
     Duration? animationDuration,
+    Duration? pressInAnimationDuration,
     Curve? animationCurve,
     Color? disabledBackgroundColor,
     Color? disabledDepthColor,
@@ -152,6 +160,8 @@ class AwesomeButtonStyle {
       raiseAmount: raiseAmount ?? this.raiseAmount,
       contentGap: contentGap ?? this.contentGap,
       animationDuration: animationDuration ?? this.animationDuration,
+      pressInAnimationDuration:
+          pressInAnimationDuration ?? this.pressInAnimationDuration,
       animationCurve: animationCurve ?? this.animationCurve,
       disabledBackgroundColor:
           disabledBackgroundColor ?? this.disabledBackgroundColor,
@@ -178,15 +188,16 @@ class AwesomeButtonStyle {
       activityColor: other.activityColor,
       pressedOverlayColor: other.pressedOverlayColor,
       foregroundColor: other.foregroundColor,
-      textSize: other.textSize,
-      textLineHeight: other.textLineHeight,
+      textSize: _finiteOrNull(other.textSize),
+      textLineHeight: _finiteOrNull(other.textLineHeight),
       textFontFamily: other.textFontFamily,
       borderRadius: other.borderRadius,
-      borderWidth: other.borderWidth,
+      borderWidth: _finiteOrNull(other.borderWidth),
       borderColor: other.borderColor,
-      raiseAmount: other.raiseAmount,
-      contentGap: other.contentGap,
+      raiseAmount: _finiteOrNull(other.raiseAmount),
+      contentGap: _finiteOrNull(other.contentGap),
       animationDuration: other.animationDuration,
+      pressInAnimationDuration: other.pressInAnimationDuration,
       animationCurve: other.animationCurve,
       disabledBackgroundColor: other.disabledBackgroundColor,
       disabledDepthColor: other.disabledDepthColor,
@@ -238,6 +249,8 @@ class AwesomeButtonStyle {
       raiseAmount: lerpDouble(a.raiseAmount, b.raiseAmount, t),
       contentGap: lerpDouble(a.contentGap, b.contentGap, t),
       animationDuration: t < 0.5 ? a.animationDuration : b.animationDuration,
+      pressInAnimationDuration:
+          t < 0.5 ? a.pressInAnimationDuration : b.pressInAnimationDuration,
       animationCurve: t < 0.5 ? a.animationCurve : b.animationCurve,
       disabledBackgroundColor: Color.lerp(
         a.disabledBackgroundColor,
@@ -282,6 +295,7 @@ class AwesomeButtonStyle {
         other.raiseAmount == raiseAmount &&
         other.contentGap == contentGap &&
         other.animationDuration == animationDuration &&
+        other.pressInAnimationDuration == pressInAnimationDuration &&
         other.animationCurve == animationCurve &&
         other.disabledBackgroundColor == disabledBackgroundColor &&
         other.disabledDepthColor == disabledDepthColor &&
@@ -310,6 +324,7 @@ class AwesomeButtonStyle {
         raiseAmount,
         contentGap,
         animationDuration,
+        pressInAnimationDuration,
         animationCurve,
         disabledBackgroundColor,
         disabledDepthColor,

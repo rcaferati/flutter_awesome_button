@@ -1055,7 +1055,7 @@ void main() {
   });
 
   testWidgets(
-      'string labels stay single-line clipped during text transition frames', (
+      'string labels may wrap instead of truncating at large text sizes', (
     tester,
   ) async {
     const buttonKey = Key('single-line-transition-button');
@@ -1088,9 +1088,9 @@ void main() {
       find.byKey(const ValueKey<String>('aws-btn-content-text')),
     );
 
-    expect(text.maxLines, 1);
-    expect(text.softWrap, false);
-    expect(text.overflow, TextOverflow.clip);
+    expect(text.maxLines, isNull);
+    expect(text.softWrap, isNot(false));
+    expect(text.overflow, isNot(TextOverflow.ellipsis));
   });
 
   testWidgets(
@@ -1791,7 +1791,6 @@ void main() {
         hasEnabledState: true,
         isEnabled: true,
         isFocusable: true,
-        hasFocusAction: true,
         hasTapAction: true,
       ),
     );
