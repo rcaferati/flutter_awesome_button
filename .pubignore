@@ -5,6 +5,7 @@ api/
 architecture/
 build/
 coverage/
+DEVELOPMENT_ARCHITECTURE.md
 doc/
 temp/
 test/
