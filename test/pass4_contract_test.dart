@@ -1,5 +1,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rcaferati_flutter_awesome_button/rcaferati_flutter_awesome_button.dart';
 
@@ -218,6 +219,215 @@ void main() {
     expect(calls, ['out', 'settled']);
   });
 
+  testWidgets('press-in disablement cancels after the update commits', (
+    tester,
+  ) async {
+    const key = Key('disable-from-press-in');
+    late StateSetter update;
+    var disabled = false;
+    final calls = <String>[];
+
+    await tester.pumpWidget(
+      host(
+        StatefulBuilder(
+          builder: (context, setState) {
+            update = setState;
+            return AwesomeButton(
+              key: key,
+              disabled: disabled,
+              onPressIn: () {
+                calls.add('in');
+                update(() => disabled = true);
+              },
+              onPressedIn: () => calls.add('pressed-in'),
+              onPressOut: () => calls.add('out'),
+              onPressedOut: () => calls.add('settled'),
+              onPress: ([next]) => calls.add('press'),
+              child: 'Disable',
+            );
+          },
+        ),
+      ),
+    );
+
+    final gesture = await tester.startGesture(tester.getCenter(face(key)));
+    await tester.pump();
+    await gesture.up();
+    await tester.pumpAndSettle();
+
+    expect(calls, ['in', 'pressed-in', 'out', 'settled']);
+  });
+
+  testWidgets('pressed-in removal suppresses all later lifecycle work', (
+    tester,
+  ) async {
+    const key = Key('remove-from-pressed-in');
+    late StateSetter update;
+    var visible = true;
+    final calls = <String>[];
+
+    await tester.pumpWidget(
+      host(
+        StatefulBuilder(
+          builder: (context, setState) {
+            update = setState;
+            if (!visible) {
+              return const SizedBox.shrink();
+            }
+            return AwesomeButton(
+              key: key,
+              onPressIn: () => calls.add('in'),
+              onPressedIn: () {
+                calls.add('pressed-in');
+                update(() => visible = false);
+              },
+              onPressOut: () => calls.add('out'),
+              onPressedOut: () => calls.add('settled'),
+              onPress: ([next]) => calls.add('press'),
+              child: 'Remove',
+            );
+          },
+        ),
+      ),
+    );
+
+    final gesture = await tester.startGesture(tester.getCenter(face(key)));
+    await tester.pump();
+    await gesture.up();
+    await tester.pumpAndSettle();
+
+    expect(calls, ['in', 'pressed-in', 'out']);
+  });
+
+  testWidgets('removal during a hold suppresses post-removal completion', (
+    tester,
+  ) async {
+    const key = Key('remove-hold');
+    late StateSetter update;
+    var visible = true;
+    final calls = <String>[];
+
+    await tester.pumpWidget(
+      host(
+        StatefulBuilder(
+          builder: (context, setState) {
+            update = setState;
+            if (!visible) {
+              return const SizedBox.shrink();
+            }
+            return AwesomeButton(
+              key: key,
+              onPress: ([next]) => calls.add('tap'),
+              onLongPress: () => calls.add('long'),
+              onPressOut: () => calls.add('out'),
+              onPressedOut: () => calls.add('settled'),
+              child: 'Remove',
+            );
+          },
+        ),
+      ),
+    );
+
+    final gesture = await tester.startGesture(tester.getCenter(face(key)));
+    await tester.pump();
+    update(() => visible = false);
+    await tester.pump();
+    await tester.pump(kLongPressTimeout);
+    await gesture.up();
+    await tester.pumpAndSettle();
+
+    expect(calls, ['out']);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('a hold without a long handler remains an ordinary tap', (
+    tester,
+  ) async {
+    const key = Key('ordinary-hold');
+    final calls = <String>[];
+
+    await tester.pumpWidget(
+      host(
+        AwesomeButton(
+          key: key,
+          onPress: ([next]) => calls.add('tap'),
+          onPressOut: () => calls.add('out'),
+          onPressedOut: () => calls.add('settled'),
+          child: 'Hold',
+        ),
+      ),
+    );
+
+    final gesture = await tester.startGesture(tester.getCenter(face(key)));
+    await tester.pump(kLongPressTimeout + const Duration(milliseconds: 20));
+    await gesture.up();
+    await tester.pumpAndSettle();
+
+    expect(calls, ['out', 'tap', 'settled']);
+  });
+
+  testWidgets('press-out removal takes effect at the commit boundary', (
+    tester,
+  ) async {
+    const key = Key('remove-from-press-out');
+    late StateSetter update;
+    var visible = true;
+    final calls = <String>[];
+
+    await tester.pumpWidget(
+      host(
+        StatefulBuilder(
+          builder: (context, setState) {
+            update = setState;
+            if (!visible) {
+              return const SizedBox.shrink();
+            }
+            return AwesomeButton(
+              key: key,
+              onPressOut: () {
+                calls.add('out');
+                update(() => visible = false);
+              },
+              onPressedOut: () => calls.add('settled'),
+              onPress: ([next]) => calls.add('press'),
+              child: 'Remove',
+            );
+          },
+        ),
+      ),
+    );
+
+    await tester.tapAt(tester.getCenter(face(key)));
+    await tester.pumpAndSettle();
+
+    expect(calls, ['out', 'press', 'settled']);
+  });
+
+  testWidgets('keyboard activation remains atomic', (tester) async {
+    const key = Key('keyboard-atomic');
+    final calls = <String>[];
+
+    await tester.pumpWidget(
+      host(
+        AwesomeButton(
+          key: key,
+          autofocus: true,
+          onPress: ([next]) => calls.add('press'),
+          onPressIn: () => calls.add('in'),
+          onPressedIn: () => calls.add('pressed-in'),
+          onPressOut: () => calls.add('out'),
+          onPressedOut: () => calls.add('pressed-out'),
+          child: 'Keyboard',
+        ),
+      ),
+    );
+    await tester.pump();
+    await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+    await tester.pump();
+
+    expect(calls, ['press']);
+  });
+
   testWidgets('semantic activation is atomic and fabricates no held lifecycle',
       (
     tester,
@@ -367,6 +577,37 @@ void main() {
     );
   });
 
+  testWidgets('a progress handle is inert after package-view removal', (
+    tester,
+  ) async {
+    const key = Key('stale-progress-handle');
+    AwesomeButtonNext? next;
+    final calls = <String>[];
+
+    await tester.pumpWidget(
+      host(
+        AwesomeButton(
+          key: key,
+          progress: true,
+          onPress: ([received]) => next = received,
+          onProgressEnd: () => calls.add('end'),
+          child: 'Progress',
+        ),
+      ),
+    );
+
+    await tester.tapAt(tester.getCenter(face(key)));
+    await tester.pump();
+    expect(next, isNotNull);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    next!(() => calls.add('complete'));
+    await tester.pumpAndSettle();
+
+    expect(calls, isEmpty);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('synchronous progress completion waits for delivery unwind', (
     tester,
   ) async {
@@ -395,6 +636,114 @@ void main() {
     expect(calls, ['press-start', 'press-end']);
     await tester.pumpAndSettle();
     expect(calls, ['press-start', 'press-end', 'complete', 'end']);
+  });
+
+  testWidgets('deferred progress activation reads the latest callback', (
+    tester,
+  ) async {
+    const key = Key('progress-live-callback');
+    late StateSetter update;
+    var version = 'A';
+    final calls = <String>[];
+
+    await tester.pumpWidget(
+      host(
+        StatefulBuilder(
+          builder: (context, setState) {
+            update = setState;
+            final current = version;
+            return AwesomeButton(
+              key: key,
+              progress: true,
+              progressLoadingTime: Duration.zero,
+              onProgressStart: () {
+                update(() => version = 'B');
+              },
+              onPress: ([next]) {
+                calls.add(current);
+                next!();
+              },
+              child: 'Progress',
+            );
+          },
+        ),
+      ),
+    );
+
+    await tester.tapAt(tester.getCenter(face(key)));
+    await tester.pump();
+    await tester.pumpAndSettle();
+
+    expect(calls, ['B']);
+  });
+
+  testWidgets('progress-start disablement rolls back before activation', (
+    tester,
+  ) async {
+    const key = Key('disable-from-progress-start');
+    late StateSetter update;
+    var disabled = false;
+    final calls = <String>[];
+
+    await tester.pumpWidget(
+      host(
+        StatefulBuilder(
+          builder: (context, setState) {
+            update = setState;
+            return AwesomeButton(
+              key: key,
+              disabled: disabled,
+              progress: true,
+              progressLoadingTime: Duration.zero,
+              onPressOut: () => calls.add('out'),
+              onPressedOut: () => calls.add('settled'),
+              onProgressStart: () {
+                calls.add('progress-start');
+                update(() => disabled = true);
+              },
+              onPress: ([next]) => calls.add('press'),
+              onProgressEnd: () => calls.add('progress-end'),
+              child: 'Disable',
+            );
+          },
+        ),
+      ),
+    );
+
+    await tester.tapAt(tester.getCenter(face(key)));
+    await tester.pump();
+    await tester.pumpAndSettle();
+
+    expect(calls, ['out', 'progress-start', 'settled', 'progress-end']);
+  });
+
+  testWidgets('arbitrary auto-width content follows committed size changes', (
+    tester,
+  ) async {
+    const key = Key('custom-auto-width');
+    late StateSetter update;
+    var contentWidth = 40.0;
+
+    await tester.pumpWidget(
+      host(
+        StatefulBuilder(
+          builder: (context, setState) {
+            update = setState;
+            return AwesomeButton(
+              key: key,
+              child: SizedBox(width: contentWidth, height: 20),
+            );
+          },
+        ),
+      ),
+    );
+    final before = tester.getSize(face(key)).width;
+
+    update(() => contentWidth = 140);
+    await tester.pumpAndSettle();
+    final after = tester.getSize(face(key)).width;
+
+    expect(after - before, closeTo(100, 0.5));
   });
 
   testWidgets('invalid numeric input normalizes to finite safe geometry', (
