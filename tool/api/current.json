@@ -1,0 +1,4280 @@
+{
+  "version": 3,
+  "packageApi": {
+    "packageName": "rcaferati_flutter_awesome_button",
+    "packageVersion": "0.9.1",
+    "packagePath": "<package-root>",
+    "interfaceDeclarations": [
+      {
+        "name": "AwesomeButton",
+        "isDeprecated": false,
+        "isExperimental": false,
+        "isSealed": false,
+        "isRequired": false,
+        "typeParameterNames": [],
+        "superTypeNames": [
+          "StatefulWidget",
+          "Widget",
+          "DiagnosticableTree",
+          "Object",
+          "Diagnosticable"
+        ],
+        "executableDeclarations": [
+          {
+            "returnTypeName": "AwesomeButton",
+            "name": "new",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "parameters": [
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "key",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Key?",
+                "relativePath": "lib/src/awesome_button.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "child",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Object?",
+                "relativePath": "lib/src/awesome_button.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "onPress",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "void Function([void Function([void Function()?])?])?",
+                "relativePath": "lib/src/awesome_button.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "onLongPress",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "void Function()?",
+                "relativePath": "lib/src/awesome_button.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "disabled",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "bool",
+                "relativePath": "lib/src/awesome_button.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "width",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "double?",
+                "relativePath": "lib/src/awesome_button.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "height",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "double",
+                "relativePath": "lib/src/awesome_button.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "paddingHorizontal",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "double?",
+                "relativePath": "lib/src/awesome_button.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "paddingTop",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "double?",
+                "relativePath": "lib/src/awesome_button.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "paddingBottom",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "double?",
+                "relativePath": "lib/src/awesome_button.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "before",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Widget?",
+                "relativePath": "lib/src/awesome_button.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "after",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Widget?",
+                "relativePath": "lib/src/awesome_button.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "extra",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Widget?",
+                "relativePath": "lib/src/awesome_button.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "stretch",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "bool",
+                "relativePath": "lib/src/awesome_button.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "style",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "AwesomeButtonStyle?",
+                "relativePath": "lib/src/awesome_button.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "focusNode",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "FocusNode?",
+                "relativePath": "lib/src/awesome_button.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "autofocus",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "bool",
+                "relativePath": "lib/src/awesome_button.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "activeOpacity",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "double",
+                "relativePath": "lib/src/awesome_button.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "debouncedPressTime",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Duration",
+                "relativePath": "lib/src/awesome_button.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "progress",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "bool",
+                "relativePath": "lib/src/awesome_button.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "showProgressBar",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "bool",
+                "relativePath": "lib/src/awesome_button.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "progressLoadingTime",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Duration",
+                "relativePath": "lib/src/awesome_button.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "animateSize",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "bool",
+                "relativePath": "lib/src/awesome_button.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "textTransition",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "bool",
+                "relativePath": "lib/src/awesome_button.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "animatedPlaceholder",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "bool",
+                "relativePath": "lib/src/awesome_button.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "pressInAnimationDuration",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Duration?",
+                "relativePath": "lib/src/awesome_button.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "accessibilityLabel",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "String?",
+                "relativePath": "lib/src/awesome_button.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "accessibilityHint",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "String?",
+                "relativePath": "lib/src/awesome_button.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "accessibilityLongPressLabel",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "String?",
+                "relativePath": "lib/src/awesome_button.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "onPressIn",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "void Function()?",
+                "relativePath": "lib/src/awesome_button.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "onPressOut",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "void Function()?",
+                "relativePath": "lib/src/awesome_button.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "onPressedIn",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "void Function()?",
+                "relativePath": "lib/src/awesome_button.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "onPressedOut",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "void Function()?",
+                "relativePath": "lib/src/awesome_button.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "onProgressStart",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "void Function()?",
+                "relativePath": "lib/src/awesome_button.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "onProgressEnd",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "void Function()?",
+                "relativePath": "lib/src/awesome_button.dart"
+              }
+            ],
+            "typeParameterNames": [],
+            "type": "constructor",
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/awesome_button.dart"
+          }
+        ],
+        "fieldDeclarations": [
+          {
+            "typeName": "Object?",
+            "name": "child",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/awesome_button.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "void Function([void Function([void Function()?])?])?",
+            "name": "onPress",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/awesome_button.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "void Function()?",
+            "name": "onLongPress",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/awesome_button.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "bool",
+            "name": "disabled",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/awesome_button.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "double?",
+            "name": "width",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/awesome_button.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "double",
+            "name": "height",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/awesome_button.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "double?",
+            "name": "paddingHorizontal",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/awesome_button.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "double?",
+            "name": "paddingTop",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/awesome_button.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "double?",
+            "name": "paddingBottom",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/awesome_button.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "Widget?",
+            "name": "before",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/awesome_button.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "Widget?",
+            "name": "after",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/awesome_button.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "Widget?",
+            "name": "extra",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/awesome_button.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "bool",
+            "name": "stretch",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/awesome_button.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "AwesomeButtonStyle?",
+            "name": "style",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/awesome_button.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "FocusNode?",
+            "name": "focusNode",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/awesome_button.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "bool",
+            "name": "autofocus",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/awesome_button.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "double",
+            "name": "activeOpacity",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/awesome_button.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "Duration",
+            "name": "debouncedPressTime",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/awesome_button.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "bool",
+            "name": "progress",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/awesome_button.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "bool",
+            "name": "showProgressBar",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/awesome_button.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "Duration",
+            "name": "progressLoadingTime",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/awesome_button.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "bool",
+            "name": "animateSize",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/awesome_button.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "bool",
+            "name": "textTransition",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/awesome_button.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "bool",
+            "name": "animatedPlaceholder",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/awesome_button.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "Duration?",
+            "name": "pressInAnimationDuration",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/awesome_button.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "String?",
+            "name": "accessibilityLabel",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/awesome_button.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "String?",
+            "name": "accessibilityHint",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/awesome_button.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "String?",
+            "name": "accessibilityLongPressLabel",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/awesome_button.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "void Function()?",
+            "name": "onPressIn",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/awesome_button.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "void Function()?",
+            "name": "onPressOut",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/awesome_button.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "void Function()?",
+            "name": "onPressedIn",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/awesome_button.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "void Function()?",
+            "name": "onPressedOut",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/awesome_button.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "void Function()?",
+            "name": "onProgressStart",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/awesome_button.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "void Function()?",
+            "name": "onProgressEnd",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/awesome_button.dart",
+            "isReadable": true,
+            "isWriteable": false
+          }
+        ],
+        "entryPoints": [
+          "rcaferati_flutter_awesome_button.dart"
+        ],
+        "relativePath": "lib/src/awesome_button.dart"
+      },
+      {
+        "name": "AwesomeButtonStyle",
+        "isDeprecated": false,
+        "isExperimental": false,
+        "isSealed": false,
+        "isRequired": false,
+        "typeParameterNames": [],
+        "superTypeNames": [
+          "Object"
+        ],
+        "executableDeclarations": [
+          {
+            "returnTypeName": "AwesomeButtonStyle",
+            "name": "copyWith",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "parameters": [
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "backgroundColor",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Color?",
+                "relativePath": "lib/src/awesome_button_style.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "backgroundActive",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Color?",
+                "relativePath": "lib/src/awesome_button_style.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "backgroundPlaceholder",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Color?",
+                "relativePath": "lib/src/awesome_button_style.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "backgroundProgress",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Color?",
+                "relativePath": "lib/src/awesome_button_style.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "depthColor",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Color?",
+                "relativePath": "lib/src/awesome_button_style.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "shadowColor",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Color?",
+                "relativePath": "lib/src/awesome_button_style.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "activityColor",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Color?",
+                "relativePath": "lib/src/awesome_button_style.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "pressedOverlayColor",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Color?",
+                "relativePath": "lib/src/awesome_button_style.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "foregroundColor",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Color?",
+                "relativePath": "lib/src/awesome_button_style.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "textSize",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "double?",
+                "relativePath": "lib/src/awesome_button_style.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "textLineHeight",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "double?",
+                "relativePath": "lib/src/awesome_button_style.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "textFontFamily",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "String?",
+                "relativePath": "lib/src/awesome_button_style.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "borderRadius",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "BorderRadiusGeometry?",
+                "relativePath": "lib/src/awesome_button_style.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "borderWidth",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "double?",
+                "relativePath": "lib/src/awesome_button_style.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "borderColor",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Color?",
+                "relativePath": "lib/src/awesome_button_style.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "raiseAmount",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "double?",
+                "relativePath": "lib/src/awesome_button_style.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "contentGap",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "double?",
+                "relativePath": "lib/src/awesome_button_style.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "animationDuration",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Duration?",
+                "relativePath": "lib/src/awesome_button_style.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "pressInAnimationDuration",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Duration?",
+                "relativePath": "lib/src/awesome_button_style.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "animationCurve",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Curve?",
+                "relativePath": "lib/src/awesome_button_style.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "disabledBackgroundColor",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Color?",
+                "relativePath": "lib/src/awesome_button_style.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "disabledDepthColor",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Color?",
+                "relativePath": "lib/src/awesome_button_style.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "disabledShadowColor",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Color?",
+                "relativePath": "lib/src/awesome_button_style.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "disabledForegroundColor",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Color?",
+                "relativePath": "lib/src/awesome_button_style.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "disabledBorderColor",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Color?",
+                "relativePath": "lib/src/awesome_button_style.dart"
+              }
+            ],
+            "typeParameterNames": [],
+            "type": "method",
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/awesome_button_style.dart"
+          },
+          {
+            "returnTypeName": "AwesomeButtonStyle",
+            "name": "merge",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "parameters": [
+              {
+                "isRequired": true,
+                "isNamed": false,
+                "name": "other",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "AwesomeButtonStyle?",
+                "relativePath": "lib/src/awesome_button_style.dart"
+              }
+            ],
+            "typeParameterNames": [],
+            "type": "method",
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/awesome_button_style.dart"
+          },
+          {
+            "returnTypeName": "AwesomeButtonStyle",
+            "name": "lerp",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "parameters": [
+              {
+                "isRequired": true,
+                "isNamed": false,
+                "name": "a",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "AwesomeButtonStyle",
+                "relativePath": "lib/src/awesome_button_style.dart"
+              },
+              {
+                "isRequired": true,
+                "isNamed": false,
+                "name": "b",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "AwesomeButtonStyle",
+                "relativePath": "lib/src/awesome_button_style.dart"
+              },
+              {
+                "isRequired": true,
+                "isNamed": false,
+                "name": "t",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "double",
+                "relativePath": "lib/src/awesome_button_style.dart"
+              }
+            ],
+            "typeParameterNames": [],
+            "type": "method",
+            "isStatic": true,
+            "entryPoints": [],
+            "relativePath": "lib/src/awesome_button_style.dart"
+          },
+          {
+            "returnTypeName": "AwesomeButtonStyle",
+            "name": "new",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "parameters": [
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "backgroundColor",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Color?",
+                "relativePath": "lib/src/awesome_button_style.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "backgroundActive",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Color?",
+                "relativePath": "lib/src/awesome_button_style.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "backgroundPlaceholder",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Color?",
+                "relativePath": "lib/src/awesome_button_style.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "backgroundProgress",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Color?",
+                "relativePath": "lib/src/awesome_button_style.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "depthColor",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Color?",
+                "relativePath": "lib/src/awesome_button_style.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "shadowColor",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Color?",
+                "relativePath": "lib/src/awesome_button_style.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "activityColor",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Color?",
+                "relativePath": "lib/src/awesome_button_style.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "pressedOverlayColor",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Color?",
+                "relativePath": "lib/src/awesome_button_style.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "foregroundColor",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Color?",
+                "relativePath": "lib/src/awesome_button_style.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "textSize",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "double?",
+                "relativePath": "lib/src/awesome_button_style.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "textLineHeight",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "double?",
+                "relativePath": "lib/src/awesome_button_style.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "textFontFamily",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "String?",
+                "relativePath": "lib/src/awesome_button_style.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "borderRadius",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "BorderRadiusGeometry?",
+                "relativePath": "lib/src/awesome_button_style.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "borderWidth",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "double?",
+                "relativePath": "lib/src/awesome_button_style.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "borderColor",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Color?",
+                "relativePath": "lib/src/awesome_button_style.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "raiseAmount",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "double?",
+                "relativePath": "lib/src/awesome_button_style.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "contentGap",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "double?",
+                "relativePath": "lib/src/awesome_button_style.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "animationDuration",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Duration?",
+                "relativePath": "lib/src/awesome_button_style.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "pressInAnimationDuration",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Duration?",
+                "relativePath": "lib/src/awesome_button_style.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "animationCurve",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Curve?",
+                "relativePath": "lib/src/awesome_button_style.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "disabledBackgroundColor",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Color?",
+                "relativePath": "lib/src/awesome_button_style.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "disabledDepthColor",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Color?",
+                "relativePath": "lib/src/awesome_button_style.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "disabledShadowColor",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Color?",
+                "relativePath": "lib/src/awesome_button_style.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "disabledForegroundColor",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Color?",
+                "relativePath": "lib/src/awesome_button_style.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "disabledBorderColor",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Color?",
+                "relativePath": "lib/src/awesome_button_style.dart"
+              }
+            ],
+            "typeParameterNames": [],
+            "type": "constructor",
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/awesome_button_style.dart"
+          }
+        ],
+        "fieldDeclarations": [
+          {
+            "typeName": "Color?",
+            "name": "backgroundColor",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/awesome_button_style.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "Color?",
+            "name": "backgroundActive",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/awesome_button_style.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "Color?",
+            "name": "backgroundPlaceholder",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/awesome_button_style.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "Color?",
+            "name": "backgroundProgress",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/awesome_button_style.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "Color?",
+            "name": "depthColor",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/awesome_button_style.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "Color?",
+            "name": "shadowColor",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/awesome_button_style.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "Color?",
+            "name": "activityColor",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/awesome_button_style.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "Color?",
+            "name": "pressedOverlayColor",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/awesome_button_style.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "Color?",
+            "name": "foregroundColor",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/awesome_button_style.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "double?",
+            "name": "textSize",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/awesome_button_style.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "double?",
+            "name": "textLineHeight",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/awesome_button_style.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "String?",
+            "name": "textFontFamily",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/awesome_button_style.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "BorderRadiusGeometry?",
+            "name": "borderRadius",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/awesome_button_style.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "double?",
+            "name": "borderWidth",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/awesome_button_style.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "Color?",
+            "name": "borderColor",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/awesome_button_style.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "double?",
+            "name": "raiseAmount",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/awesome_button_style.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "double?",
+            "name": "contentGap",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/awesome_button_style.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "Duration?",
+            "name": "animationDuration",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/awesome_button_style.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "Duration?",
+            "name": "pressInAnimationDuration",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/awesome_button_style.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "Curve?",
+            "name": "animationCurve",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/awesome_button_style.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "Color?",
+            "name": "disabledBackgroundColor",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/awesome_button_style.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "Color?",
+            "name": "disabledDepthColor",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/awesome_button_style.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "Color?",
+            "name": "disabledShadowColor",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/awesome_button_style.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "Color?",
+            "name": "disabledForegroundColor",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/awesome_button_style.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "Color?",
+            "name": "disabledBorderColor",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/awesome_button_style.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "int",
+            "name": "hashCode",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/awesome_button_style.dart",
+            "isReadable": true,
+            "isWriteable": false
+          }
+        ],
+        "entryPoints": [
+          "rcaferati_flutter_awesome_button.dart"
+        ],
+        "relativePath": "lib/src/awesome_button_style.dart"
+      },
+      {
+        "name": "AwesomeButtonThemeData",
+        "isDeprecated": false,
+        "isExperimental": false,
+        "isSealed": false,
+        "isRequired": false,
+        "typeParameterNames": [],
+        "superTypeNames": [
+          "ThemeExtension<AwesomeButtonThemeData>",
+          "Object"
+        ],
+        "executableDeclarations": [
+          {
+            "returnTypeName": "AwesomeButtonThemeData",
+            "name": "resolve",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "parameters": [
+              {
+                "isRequired": true,
+                "isNamed": false,
+                "name": "context",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "BuildContext",
+                "relativePath": "lib/src/awesome_button_theme_data.dart"
+              }
+            ],
+            "typeParameterNames": [],
+            "type": "method",
+            "isStatic": true,
+            "entryPoints": [],
+            "relativePath": "lib/src/awesome_button_theme_data.dart"
+          },
+          {
+            "returnTypeName": "AwesomeButtonThemeData",
+            "name": "new",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "parameters": [
+              {
+                "isRequired": true,
+                "isNamed": true,
+                "name": "style",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "AwesomeButtonStyle",
+                "relativePath": "lib/src/awesome_button_theme_data.dart"
+              }
+            ],
+            "typeParameterNames": [],
+            "type": "constructor",
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/awesome_button_theme_data.dart"
+          }
+        ],
+        "fieldDeclarations": [
+          {
+            "typeName": "AwesomeButtonStyle",
+            "name": "style",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/awesome_button_theme_data.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "AwesomeButtonStyle",
+            "name": "fallbackStyle",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": true,
+            "entryPoints": [],
+            "relativePath": "lib/src/awesome_button_theme_data.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "AwesomeButtonThemeData",
+            "name": "fallback",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": true,
+            "entryPoints": [],
+            "relativePath": "lib/src/awesome_button_theme_data.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "int",
+            "name": "hashCode",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/awesome_button_theme_data.dart",
+            "isReadable": true,
+            "isWriteable": false
+          }
+        ],
+        "entryPoints": [
+          "rcaferati_flutter_awesome_button.dart"
+        ],
+        "relativePath": "lib/src/awesome_button_theme_data.dart"
+      },
+      {
+        "name": "ThemeButtonStyle",
+        "isDeprecated": false,
+        "isExperimental": false,
+        "isSealed": false,
+        "isRequired": false,
+        "typeParameterNames": [],
+        "superTypeNames": [
+          "Object"
+        ],
+        "executableDeclarations": [
+          {
+            "returnTypeName": "ThemeButtonStyle",
+            "name": "copyWith",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "parameters": [
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "activityColor",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Color?",
+                "relativePath": "lib/src/themed/models.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "backgroundActive",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Color?",
+                "relativePath": "lib/src/themed/models.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "backgroundColor",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Color?",
+                "relativePath": "lib/src/themed/models.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "backgroundDarker",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Color?",
+                "relativePath": "lib/src/themed/models.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "backgroundPlaceholder",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Color?",
+                "relativePath": "lib/src/themed/models.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "backgroundProgress",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Color?",
+                "relativePath": "lib/src/themed/models.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "backgroundShadow",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Color?",
+                "relativePath": "lib/src/themed/models.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "borderColor",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Color?",
+                "relativePath": "lib/src/themed/models.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "borderRadius",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "double?",
+                "relativePath": "lib/src/themed/models.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "borderBottomLeftRadius",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "double?",
+                "relativePath": "lib/src/themed/models.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "borderBottomRightRadius",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "double?",
+                "relativePath": "lib/src/themed/models.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "borderTopLeftRadius",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "double?",
+                "relativePath": "lib/src/themed/models.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "borderTopRightRadius",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "double?",
+                "relativePath": "lib/src/themed/models.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "borderWidth",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "double?",
+                "relativePath": "lib/src/themed/models.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "height",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "double?",
+                "relativePath": "lib/src/themed/models.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "paddingBottom",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "double?",
+                "relativePath": "lib/src/themed/models.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "paddingHorizontal",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "double?",
+                "relativePath": "lib/src/themed/models.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "paddingTop",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "double?",
+                "relativePath": "lib/src/themed/models.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "raiseLevel",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "double?",
+                "relativePath": "lib/src/themed/models.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "textColor",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Color?",
+                "relativePath": "lib/src/themed/models.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "textFontFamily",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "String?",
+                "relativePath": "lib/src/themed/models.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "textLineHeight",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "double?",
+                "relativePath": "lib/src/themed/models.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "textSize",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "double?",
+                "relativePath": "lib/src/themed/models.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "width",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "double?",
+                "relativePath": "lib/src/themed/models.dart"
+              }
+            ],
+            "typeParameterNames": [],
+            "type": "method",
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart"
+          },
+          {
+            "returnTypeName": "ThemeButtonStyle",
+            "name": "merge",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "parameters": [
+              {
+                "isRequired": true,
+                "isNamed": false,
+                "name": "other",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "ThemeButtonStyle?",
+                "relativePath": "lib/src/themed/models.dart"
+              }
+            ],
+            "typeParameterNames": [],
+            "type": "method",
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart"
+          },
+          {
+            "returnTypeName": "ThemeButtonStyle",
+            "name": "new",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "parameters": [
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "activityColor",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Color?",
+                "relativePath": "lib/src/themed/models.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "backgroundActive",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Color?",
+                "relativePath": "lib/src/themed/models.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "backgroundColor",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Color?",
+                "relativePath": "lib/src/themed/models.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "backgroundDarker",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Color?",
+                "relativePath": "lib/src/themed/models.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "backgroundPlaceholder",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Color?",
+                "relativePath": "lib/src/themed/models.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "backgroundProgress",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Color?",
+                "relativePath": "lib/src/themed/models.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "backgroundShadow",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Color?",
+                "relativePath": "lib/src/themed/models.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "borderColor",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Color?",
+                "relativePath": "lib/src/themed/models.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "borderRadius",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "double?",
+                "relativePath": "lib/src/themed/models.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "borderBottomLeftRadius",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "double?",
+                "relativePath": "lib/src/themed/models.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "borderBottomRightRadius",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "double?",
+                "relativePath": "lib/src/themed/models.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "borderTopLeftRadius",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "double?",
+                "relativePath": "lib/src/themed/models.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "borderTopRightRadius",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "double?",
+                "relativePath": "lib/src/themed/models.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "borderWidth",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "double?",
+                "relativePath": "lib/src/themed/models.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "height",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "double?",
+                "relativePath": "lib/src/themed/models.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "paddingBottom",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "double?",
+                "relativePath": "lib/src/themed/models.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "paddingHorizontal",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "double?",
+                "relativePath": "lib/src/themed/models.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "paddingTop",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "double?",
+                "relativePath": "lib/src/themed/models.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "raiseLevel",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "double?",
+                "relativePath": "lib/src/themed/models.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "textColor",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Color?",
+                "relativePath": "lib/src/themed/models.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "textFontFamily",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "String?",
+                "relativePath": "lib/src/themed/models.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "textLineHeight",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "double?",
+                "relativePath": "lib/src/themed/models.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "textSize",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "double?",
+                "relativePath": "lib/src/themed/models.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "width",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "double?",
+                "relativePath": "lib/src/themed/models.dart"
+              }
+            ],
+            "typeParameterNames": [],
+            "type": "constructor",
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart"
+          }
+        ],
+        "fieldDeclarations": [
+          {
+            "typeName": "Color?",
+            "name": "activityColor",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "Color?",
+            "name": "backgroundActive",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "Color?",
+            "name": "backgroundColor",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "Color?",
+            "name": "backgroundDarker",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "Color?",
+            "name": "backgroundPlaceholder",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "Color?",
+            "name": "backgroundProgress",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "Color?",
+            "name": "backgroundShadow",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "Color?",
+            "name": "borderColor",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "double?",
+            "name": "borderRadius",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "double?",
+            "name": "borderBottomLeftRadius",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "double?",
+            "name": "borderBottomRightRadius",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "double?",
+            "name": "borderTopLeftRadius",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "double?",
+            "name": "borderTopRightRadius",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "double?",
+            "name": "borderWidth",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "double?",
+            "name": "height",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "double?",
+            "name": "paddingBottom",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "double?",
+            "name": "paddingHorizontal",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "double?",
+            "name": "paddingTop",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "double?",
+            "name": "raiseLevel",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "Color?",
+            "name": "textColor",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "String?",
+            "name": "textFontFamily",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "double?",
+            "name": "textLineHeight",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "double?",
+            "name": "textSize",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "double?",
+            "name": "width",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "int",
+            "name": "hashCode",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart",
+            "isReadable": true,
+            "isWriteable": false
+          }
+        ],
+        "entryPoints": [
+          "rcaferati_flutter_awesome_button.dart"
+        ],
+        "relativePath": "lib/src/themed/models.dart"
+      },
+      {
+        "name": "ThemeSizeStyle",
+        "isDeprecated": false,
+        "isExperimental": false,
+        "isSealed": false,
+        "isRequired": false,
+        "typeParameterNames": [],
+        "superTypeNames": [
+          "Object"
+        ],
+        "executableDeclarations": [
+          {
+            "returnTypeName": "ThemeSizeStyle",
+            "name": "new",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "parameters": [
+              {
+                "isRequired": true,
+                "isNamed": true,
+                "name": "width",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "double",
+                "relativePath": "lib/src/themed/models.dart"
+              },
+              {
+                "isRequired": true,
+                "isNamed": true,
+                "name": "height",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "double",
+                "relativePath": "lib/src/themed/models.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "textSize",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "double?",
+                "relativePath": "lib/src/themed/models.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "paddingHorizontal",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "double?",
+                "relativePath": "lib/src/themed/models.dart"
+              }
+            ],
+            "typeParameterNames": [],
+            "type": "constructor",
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart"
+          }
+        ],
+        "fieldDeclarations": [
+          {
+            "typeName": "double",
+            "name": "width",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "double",
+            "name": "height",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "double?",
+            "name": "textSize",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "double?",
+            "name": "paddingHorizontal",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "int",
+            "name": "hashCode",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart",
+            "isReadable": true,
+            "isWriteable": false
+          }
+        ],
+        "entryPoints": [
+          "rcaferati_flutter_awesome_button.dart"
+        ],
+        "relativePath": "lib/src/themed/models.dart"
+      },
+      {
+        "name": "ThemeDefinition",
+        "isDeprecated": false,
+        "isExperimental": false,
+        "isSealed": false,
+        "isRequired": false,
+        "typeParameterNames": [],
+        "superTypeNames": [
+          "Object"
+        ],
+        "executableDeclarations": [
+          {
+            "returnTypeName": "ThemeDefinition",
+            "name": "new",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "parameters": [
+              {
+                "isRequired": true,
+                "isNamed": true,
+                "name": "title",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "String",
+                "relativePath": "lib/src/themed/models.dart"
+              },
+              {
+                "isRequired": true,
+                "isNamed": true,
+                "name": "background",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Color",
+                "relativePath": "lib/src/themed/models.dart"
+              },
+              {
+                "isRequired": true,
+                "isNamed": true,
+                "name": "color",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Color",
+                "relativePath": "lib/src/themed/models.dart"
+              },
+              {
+                "isRequired": true,
+                "isNamed": true,
+                "name": "buttons",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Map<ButtonVariant, ThemeButtonStyle>",
+                "relativePath": "lib/src/themed/models.dart"
+              },
+              {
+                "isRequired": true,
+                "isNamed": true,
+                "name": "size",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Map<ButtonSize, ThemeSizeStyle>",
+                "relativePath": "lib/src/themed/models.dart"
+              }
+            ],
+            "typeParameterNames": [],
+            "type": "constructor",
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart"
+          }
+        ],
+        "fieldDeclarations": [
+          {
+            "typeName": "String",
+            "name": "title",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "Color",
+            "name": "background",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "Color",
+            "name": "color",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "Map<ButtonVariant, ThemeButtonStyle>",
+            "name": "buttons",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "Map<ButtonSize, ThemeSizeStyle>",
+            "name": "size",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "int",
+            "name": "hashCode",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart",
+            "isReadable": true,
+            "isWriteable": false
+          }
+        ],
+        "entryPoints": [
+          "rcaferati_flutter_awesome_button.dart"
+        ],
+        "relativePath": "lib/src/themed/models.dart"
+      },
+      {
+        "name": "ButtonVariant",
+        "isDeprecated": false,
+        "isExperimental": false,
+        "isSealed": false,
+        "isRequired": false,
+        "typeParameterNames": [],
+        "superTypeNames": [
+          "Enum",
+          "Object"
+        ],
+        "executableDeclarations": [],
+        "fieldDeclarations": [
+          {
+            "typeName": "ButtonVariant",
+            "name": "primary",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": true,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "ButtonVariant",
+            "name": "secondary",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": true,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "ButtonVariant",
+            "name": "anchor",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": true,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "ButtonVariant",
+            "name": "danger",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": true,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "ButtonVariant",
+            "name": "disabled",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": true,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "ButtonVariant",
+            "name": "flat",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": true,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "ButtonVariant",
+            "name": "twitter",
+            "isDeprecated": true,
+            "isExperimental": false,
+            "isStatic": true,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "ButtonVariant",
+            "name": "messenger",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": true,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "ButtonVariant",
+            "name": "facebook",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": true,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "ButtonVariant",
+            "name": "github",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": true,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "ButtonVariant",
+            "name": "linkedin",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": true,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "ButtonVariant",
+            "name": "whatsapp",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": true,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "ButtonVariant",
+            "name": "reddit",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": true,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "ButtonVariant",
+            "name": "pinterest",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": true,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "ButtonVariant",
+            "name": "youtube",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": true,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "List<ButtonVariant>",
+            "name": "values",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": true,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "ButtonVariant",
+            "name": "x",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": true,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart",
+            "isReadable": true,
+            "isWriteable": false
+          }
+        ],
+        "entryPoints": [
+          "rcaferati_flutter_awesome_button.dart"
+        ],
+        "relativePath": "lib/src/themed/models.dart"
+      },
+      {
+        "name": "ButtonSize",
+        "isDeprecated": false,
+        "isExperimental": false,
+        "isSealed": false,
+        "isRequired": false,
+        "typeParameterNames": [],
+        "superTypeNames": [
+          "Enum",
+          "Object"
+        ],
+        "executableDeclarations": [],
+        "fieldDeclarations": [
+          {
+            "typeName": "ButtonSize",
+            "name": "icon",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": true,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "ButtonSize",
+            "name": "small",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": true,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "ButtonSize",
+            "name": "medium",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": true,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "ButtonSize",
+            "name": "large",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": true,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "List<ButtonSize>",
+            "name": "values",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": true,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart",
+            "isReadable": true,
+            "isWriteable": false
+          }
+        ],
+        "entryPoints": [
+          "rcaferati_flutter_awesome_button.dart"
+        ],
+        "relativePath": "lib/src/themed/models.dart"
+      },
+      {
+        "name": "RegisteredThemeDefinition",
+        "isDeprecated": false,
+        "isExperimental": false,
+        "isSealed": false,
+        "isRequired": false,
+        "typeParameterNames": [],
+        "superTypeNames": [
+          "ThemeDefinition",
+          "Object"
+        ],
+        "executableDeclarations": [
+          {
+            "returnTypeName": "RegisteredThemeDefinition",
+            "name": "new",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "parameters": [
+              {
+                "isRequired": true,
+                "isNamed": true,
+                "name": "title",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "String",
+                "relativePath": "lib/src/themed/models.dart"
+              },
+              {
+                "isRequired": true,
+                "isNamed": true,
+                "name": "background",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Color",
+                "relativePath": "lib/src/themed/models.dart"
+              },
+              {
+                "isRequired": true,
+                "isNamed": true,
+                "name": "color",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Color",
+                "relativePath": "lib/src/themed/models.dart"
+              },
+              {
+                "isRequired": true,
+                "isNamed": true,
+                "name": "buttons",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Map<ButtonVariant, ThemeButtonStyle>",
+                "relativePath": "lib/src/themed/models.dart"
+              },
+              {
+                "isRequired": true,
+                "isNamed": true,
+                "name": "size",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Map<ButtonSize, ThemeSizeStyle>",
+                "relativePath": "lib/src/themed/models.dart"
+              },
+              {
+                "isRequired": true,
+                "isNamed": true,
+                "name": "name",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "ThemeName",
+                "relativePath": "lib/src/themed/models.dart"
+              },
+              {
+                "isRequired": true,
+                "isNamed": true,
+                "name": "next",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "bool",
+                "relativePath": "lib/src/themed/models.dart"
+              },
+              {
+                "isRequired": true,
+                "isNamed": true,
+                "name": "prev",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "bool",
+                "relativePath": "lib/src/themed/models.dart"
+              }
+            ],
+            "typeParameterNames": [],
+            "type": "constructor",
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart"
+          }
+        ],
+        "fieldDeclarations": [
+          {
+            "typeName": "ThemeName",
+            "name": "name",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "bool",
+            "name": "next",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "bool",
+            "name": "prev",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "String",
+            "name": "title",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "Color",
+            "name": "background",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "Color",
+            "name": "color",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "Map<ButtonVariant, ThemeButtonStyle>",
+            "name": "buttons",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "Map<ButtonSize, ThemeSizeStyle>",
+            "name": "size",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "int",
+            "name": "hashCode",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart",
+            "isReadable": true,
+            "isWriteable": false
+          }
+        ],
+        "entryPoints": [
+          "rcaferati_flutter_awesome_button.dart"
+        ],
+        "relativePath": "lib/src/themed/models.dart"
+      },
+      {
+        "name": "ThemeName",
+        "isDeprecated": false,
+        "isExperimental": false,
+        "isSealed": false,
+        "isRequired": false,
+        "typeParameterNames": [],
+        "superTypeNames": [
+          "Enum",
+          "Object"
+        ],
+        "executableDeclarations": [],
+        "fieldDeclarations": [
+          {
+            "typeName": "ThemeName",
+            "name": "basic",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": true,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "ThemeName",
+            "name": "bojack",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": true,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "ThemeName",
+            "name": "cartman",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": true,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "ThemeName",
+            "name": "mysterion",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": true,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "ThemeName",
+            "name": "c137",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": true,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "ThemeName",
+            "name": "rick",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": true,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "ThemeName",
+            "name": "summer",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": true,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "ThemeName",
+            "name": "bruce",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": true,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "List<ThemeName>",
+            "name": "values",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": true,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/models.dart",
+            "isReadable": true,
+            "isWriteable": false
+          }
+        ],
+        "entryPoints": [
+          "rcaferati_flutter_awesome_button.dart"
+        ],
+        "relativePath": "lib/src/themed/models.dart"
+      },
+      {
+        "name": "ThemedButton",
+        "isDeprecated": false,
+        "isExperimental": false,
+        "isSealed": false,
+        "isRequired": false,
+        "typeParameterNames": [],
+        "superTypeNames": [
+          "StatefulWidget",
+          "Widget",
+          "DiagnosticableTree",
+          "Object",
+          "Diagnosticable"
+        ],
+        "executableDeclarations": [
+          {
+            "returnTypeName": "ThemedButton",
+            "name": "new",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "parameters": [
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "key",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Key?",
+                "relativePath": "lib/src/themed/themed_button.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "child",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Object?",
+                "relativePath": "lib/src/themed/themed_button.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "config",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "ThemeDefinition?",
+                "relativePath": "lib/src/themed/themed_button.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "index",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "int?",
+                "relativePath": "lib/src/themed/themed_button.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "name",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "ThemeName?",
+                "relativePath": "lib/src/themed/themed_button.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "type",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "ButtonVariant",
+                "relativePath": "lib/src/themed/themed_button.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "size",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "ButtonSize",
+                "relativePath": "lib/src/themed/themed_button.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "flat",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "bool",
+                "relativePath": "lib/src/themed/themed_button.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "transparent",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "bool",
+                "relativePath": "lib/src/themed/themed_button.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "textTransition",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "bool",
+                "relativePath": "lib/src/themed/themed_button.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "animatedPlaceholder",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "bool",
+                "relativePath": "lib/src/themed/themed_button.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "onPress",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "void Function([void Function([void Function()?])?])?",
+                "relativePath": "lib/src/themed/themed_button.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "onLongPress",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "void Function()?",
+                "relativePath": "lib/src/themed/themed_button.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "disabled",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "bool",
+                "relativePath": "lib/src/themed/themed_button.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "width",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "double?",
+                "relativePath": "lib/src/themed/themed_button.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "autoWidth",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "bool",
+                "relativePath": "lib/src/themed/themed_button.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "height",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "double?",
+                "relativePath": "lib/src/themed/themed_button.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "paddingHorizontal",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "double?",
+                "relativePath": "lib/src/themed/themed_button.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "paddingTop",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "double?",
+                "relativePath": "lib/src/themed/themed_button.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "paddingBottom",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "double?",
+                "relativePath": "lib/src/themed/themed_button.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "before",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Widget?",
+                "relativePath": "lib/src/themed/themed_button.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "after",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Widget?",
+                "relativePath": "lib/src/themed/themed_button.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "extra",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Widget?",
+                "relativePath": "lib/src/themed/themed_button.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "stretch",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "bool",
+                "relativePath": "lib/src/themed/themed_button.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "style",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "AwesomeButtonStyle?",
+                "relativePath": "lib/src/themed/themed_button.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "focusNode",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "FocusNode?",
+                "relativePath": "lib/src/themed/themed_button.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "autofocus",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "bool",
+                "relativePath": "lib/src/themed/themed_button.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "activeOpacity",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "double",
+                "relativePath": "lib/src/themed/themed_button.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "debouncedPressTime",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Duration",
+                "relativePath": "lib/src/themed/themed_button.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "progress",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "bool",
+                "relativePath": "lib/src/themed/themed_button.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "showProgressBar",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "bool",
+                "relativePath": "lib/src/themed/themed_button.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "progressLoadingTime",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Duration",
+                "relativePath": "lib/src/themed/themed_button.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "animateSize",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "bool",
+                "relativePath": "lib/src/themed/themed_button.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "onPressIn",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "void Function()?",
+                "relativePath": "lib/src/themed/themed_button.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "onPressOut",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "void Function()?",
+                "relativePath": "lib/src/themed/themed_button.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "onPressedIn",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "void Function()?",
+                "relativePath": "lib/src/themed/themed_button.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "onPressedOut",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "void Function()?",
+                "relativePath": "lib/src/themed/themed_button.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "onProgressStart",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "void Function()?",
+                "relativePath": "lib/src/themed/themed_button.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "onProgressEnd",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "void Function()?",
+                "relativePath": "lib/src/themed/themed_button.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "pressInAnimationDuration",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "Duration?",
+                "relativePath": "lib/src/themed/themed_button.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "accessibilityLabel",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "String?",
+                "relativePath": "lib/src/themed/themed_button.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "accessibilityHint",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "String?",
+                "relativePath": "lib/src/themed/themed_button.dart"
+              },
+              {
+                "isRequired": false,
+                "isNamed": true,
+                "name": "accessibilityLongPressLabel",
+                "isDeprecated": false,
+                "isExperimental": false,
+                "typeName": "String?",
+                "relativePath": "lib/src/themed/themed_button.dart"
+              }
+            ],
+            "typeParameterNames": [],
+            "type": "constructor",
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/themed_button.dart"
+          }
+        ],
+        "fieldDeclarations": [
+          {
+            "typeName": "Object?",
+            "name": "child",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/themed_button.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "ThemeDefinition?",
+            "name": "config",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/themed_button.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "int?",
+            "name": "index",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/themed_button.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "ThemeName?",
+            "name": "name",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/themed_button.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "ButtonVariant",
+            "name": "type",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/themed_button.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "ButtonSize",
+            "name": "size",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/themed_button.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "bool",
+            "name": "flat",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/themed_button.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "bool",
+            "name": "transparent",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/themed_button.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "bool",
+            "name": "textTransition",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/themed_button.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "bool",
+            "name": "animatedPlaceholder",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/themed_button.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "void Function([void Function([void Function()?])?])?",
+            "name": "onPress",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/themed_button.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "void Function()?",
+            "name": "onLongPress",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/themed_button.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "bool",
+            "name": "disabled",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/themed_button.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "double?",
+            "name": "width",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/themed_button.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "bool",
+            "name": "autoWidth",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/themed_button.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "double?",
+            "name": "height",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/themed_button.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "double?",
+            "name": "paddingHorizontal",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/themed_button.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "double?",
+            "name": "paddingTop",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/themed_button.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "double?",
+            "name": "paddingBottom",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/themed_button.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "Widget?",
+            "name": "before",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/themed_button.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "Widget?",
+            "name": "after",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/themed_button.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "Widget?",
+            "name": "extra",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/themed_button.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "bool",
+            "name": "stretch",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/themed_button.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "AwesomeButtonStyle?",
+            "name": "style",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/themed_button.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "FocusNode?",
+            "name": "focusNode",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/themed_button.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "bool",
+            "name": "autofocus",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/themed_button.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "double",
+            "name": "activeOpacity",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/themed_button.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "Duration",
+            "name": "debouncedPressTime",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/themed_button.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "bool",
+            "name": "progress",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/themed_button.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "bool",
+            "name": "showProgressBar",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/themed_button.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "Duration",
+            "name": "progressLoadingTime",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/themed_button.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "bool",
+            "name": "animateSize",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/themed_button.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "void Function()?",
+            "name": "onPressIn",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/themed_button.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "void Function()?",
+            "name": "onPressOut",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/themed_button.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "void Function()?",
+            "name": "onPressedIn",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/themed_button.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "void Function()?",
+            "name": "onPressedOut",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/themed_button.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "void Function()?",
+            "name": "onProgressStart",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/themed_button.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "void Function()?",
+            "name": "onProgressEnd",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/themed_button.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "Duration?",
+            "name": "pressInAnimationDuration",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/themed_button.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "String?",
+            "name": "accessibilityLabel",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/themed_button.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "String?",
+            "name": "accessibilityHint",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/themed_button.dart",
+            "isReadable": true,
+            "isWriteable": false
+          },
+          {
+            "typeName": "String?",
+            "name": "accessibilityLongPressLabel",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "isStatic": false,
+            "entryPoints": [],
+            "relativePath": "lib/src/themed/themed_button.dart",
+            "isReadable": true,
+            "isWriteable": false
+          }
+        ],
+        "entryPoints": [
+          "rcaferati_flutter_awesome_button.dart"
+        ],
+        "relativePath": "lib/src/themed/themed_button.dart"
+      }
+    ],
+    "executableDeclarations": [
+      {
+        "returnTypeName": "RegisteredThemeDefinition",
+        "name": "getTheme",
+        "isDeprecated": false,
+        "isExperimental": false,
+        "parameters": [
+          {
+            "isRequired": false,
+            "isNamed": true,
+            "name": "index",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "typeName": "int?",
+            "relativePath": "lib/src/themed/themes.dart"
+          },
+          {
+            "isRequired": false,
+            "isNamed": true,
+            "name": "name",
+            "isDeprecated": false,
+            "isExperimental": false,
+            "typeName": "ThemeName?",
+            "relativePath": "lib/src/themed/themes.dart"
+          }
+        ],
+        "typeParameterNames": [],
+        "type": "method",
+        "isStatic": true,
+        "entryPoints": [
+          "rcaferati_flutter_awesome_button.dart"
+        ],
+        "relativePath": "lib/src/themed/themes.dart"
+      }
+    ],
+    "fieldDeclarations": [],
+    "typeAliasDeclarations": [
+      {
+        "name": "AwesomeButtonNext",
+        "aliasedTypeName": "void Function([void Function()?])",
+        "isDeprecated": false,
+        "isExperimental": false,
+        "entryPoints": [
+          "rcaferati_flutter_awesome_button.dart"
+        ],
+        "relativePath": "lib/src/awesome_button.dart"
+      },
+      {
+        "name": "AwesomeButtonPressCallback",
+        "aliasedTypeName": "void Function([void Function([void Function()?])?])",
+        "isDeprecated": false,
+        "isExperimental": false,
+        "entryPoints": [
+          "rcaferati_flutter_awesome_button.dart"
+        ],
+        "relativePath": "lib/src/awesome_button.dart"
+      }
+    ],
+    "semantics": [
+      "containsPlatformConstraints"
+    ],
+    "iosPlatformConstraints": null,
+    "androidPlatformConstraints": null,
+    "sdkType": "flutter",
+    "minSdkVersion": "3.5.0",
+    "packageDependencies": []
+  },
+  "missingEntryPoints": []
+}

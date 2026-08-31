@@ -48,7 +48,8 @@ enum ButtonVariant {
   /// Flat visual variant.
   flat,
 
-  /// Twitter social variant.
+  /// Legacy Twitter spelling. Use [ButtonVariant.x].
+  @Deprecated('Use ButtonVariant.x. Runtime enum identity remains twitter.')
   twitter,
 
   /// Messenger social variant.
@@ -73,7 +74,10 @@ enum ButtonVariant {
   pinterest,
 
   /// YouTube social variant.
-  youtube,
+  youtube;
+
+  /// Canonical X spelling, bridged to the legacy runtime enum value.
+  static const ButtonVariant x = ButtonVariant.twitter;
 }
 
 /// Built-in size presets used by [ThemedButton].

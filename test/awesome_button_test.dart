@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:rcaferati_flutter_awesome_button/rcaferati_flutter_awesome_button.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -159,6 +160,54 @@ void main() {
   Future<void> pumpAutoWidthMeasurement(WidgetTester tester) async {
     await tester.pump();
     await tester.pump();
+  }
+
+  Future<String> pumpUntilTransientText(
+    WidgetTester tester, {
+    required String source,
+    required String target,
+    int maxFrames = 40,
+  }) async {
+    for (var index = 0; index < maxFrames; index += 1) {
+      await tester.pump(const Duration(milliseconds: 16));
+      final text = tester
+          .widget<Text>(
+            find.byKey(const ValueKey<String>('aws-btn-content-text')),
+          )
+          .data!;
+      if (text != source && text != target) {
+        return text;
+      }
+    }
+    fail('No transient text frame was published before the frame limit.');
+  }
+
+  double requiredOuterWidthForVisibleText(
+    WidgetTester tester, {
+    required double horizontalPadding,
+    required double borderWidth,
+    double auxiliaryWidth = 0,
+    double gapWidth = 0,
+  }) {
+    final finder = find.byKey(const ValueKey<String>('aws-btn-content-text'));
+    final text = tester.widget<Text>(finder);
+    final context = tester.element(finder);
+    final painter = TextPainter(
+      text: TextSpan(
+        text: text.data,
+        style: DefaultTextStyle.of(context).style,
+      ),
+      maxLines: 1,
+      textAlign: text.textAlign ?? TextAlign.start,
+      textDirection: Directionality.of(context),
+      textScaler: MediaQuery.textScalerOf(context),
+      locale: Localizations.maybeLocaleOf(context),
+    )..layout(maxWidth: double.infinity);
+    return painter.width +
+        (horizontalPadding * 2) +
+        (borderWidth * 2) +
+        auxiliaryWidth +
+        gapWidth;
   }
 
   testWidgets('renders child content', (tester) async {
@@ -461,6 +510,7 @@ void main() {
     tester,
   ) async {
     const buttonKey = Key('auto-width-size-button');
+    final semantics = tester.ensureSemantics();
 
     await tester.pumpWidget(
       wrapForTest(
@@ -482,7 +532,6 @@ void main() {
         ),
       ),
     );
-    await pumpAutoWidthMeasurement(tester);
 
     expect(
       tester
@@ -492,6 +541,24 @@ void main() {
           .data,
       'Open',
     );
+    expect(
+      tester.getSemantics(find.byKey(buttonKey)).label,
+      'Open analytics dashboard',
+    );
+    await pumpAutoWidthMeasurement(tester);
+
+    var pendingText = tester.widget<Text>(
+      find.byKey(const ValueKey<String>('aws-btn-content-text')),
+    );
+    expect(pendingText.data, 'Open');
+    expect(pendingText.maxLines, 1);
+    expect(pendingText.softWrap, isFalse);
+
+    await tester.pump(const Duration(milliseconds: 80));
+    pendingText = tester.widget<Text>(
+      find.byKey(const ValueKey<String>('aws-btn-content-text')),
+    );
+    expect(pendingText.data, 'Open');
 
     await tester.pumpAndSettle();
 
@@ -505,6 +572,14 @@ void main() {
           .data,
       'Open analytics dashboard',
     );
+    expect(
+      tester
+          .widget<Text>(
+            find.byKey(const ValueKey<String>('aws-btn-content-text')),
+          )
+          .maxLines,
+      isNull,
+    );
 
     await tester.pumpWidget(
       wrapForTest(
@@ -514,7 +589,7 @@ void main() {
         ),
       ),
     );
-    await pumpAutoWidthMeasurement(tester);
+    await tester.pump();
 
     expect(
       tester
@@ -524,12 +599,176 @@ void main() {
           .data,
       'Open',
     );
+    final shrinkingTarget = tester.widget<Text>(
+      find.byKey(const ValueKey<String>('aws-btn-content-text')),
+    );
+    expect(shrinkingTarget.maxLines, 1);
+    expect(shrinkingTarget.softWrap, isFalse);
+    expect(shrinkingTarget.overflow, TextOverflow.clip);
 
     await tester.pumpAndSettle();
     expect(tester.getSize(shellFinderFor(buttonKey)).width, shortWidth);
+    semantics.dispose();
   });
 
-  testWidgets('auto-width with textTransition grows text and width together', (
+  testWidgets(
+      'final target stays single-line through physical-pixel commit proof', (
+    tester,
+  ) async {
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.resetDevicePixelRatio);
+    const buttonKey = Key('physical-pixel-target-commit-button');
+
+    Widget build(String label) => wrapForTest(
+          AwesomeButton(
+            key: buttonKey,
+            style: const AwesomeButtonStyle(textFontFamily: 'Ahem'),
+            child: label,
+          ),
+        );
+
+    await tester.pumpWidget(build('Open'));
+    await pumpAutoWidthMeasurement(tester);
+    await tester.pumpWidget(build('Open analytics dashboard'));
+    await pumpAutoWidthMeasurement(tester);
+
+    Text? publishedTarget;
+    for (var frame = 0; frame < 30; frame += 1) {
+      await tester.pump(const Duration(milliseconds: 16));
+      final text = tester.widget<Text>(
+        find.byKey(const ValueKey<String>('aws-btn-content-text')),
+      );
+      if (text.data == 'Open analytics dashboard') {
+        publishedTarget = text;
+        break;
+      }
+    }
+
+    expect(publishedTarget, isNotNull);
+    expect(publishedTarget!.maxLines, 1);
+    expect(publishedTarget.softWrap, isFalse);
+    expect(publishedTarget.overflow, TextOverflow.clip);
+    final requiredWidth = requiredOuterWidthForVisibleText(
+      tester,
+      horizontalPadding: 16,
+      borderWidth: 0,
+    );
+    final availableWidth = tester.getSize(shellFinderFor(buttonKey)).width;
+    expect(
+      (availableWidth * 3).floor(),
+      greaterThanOrEqualTo((requiredWidth * 3).ceil()),
+    );
+
+    await tester.pump();
+    final stableTarget = tester.widget<Text>(
+      find.byKey(const ValueKey<String>('aws-btn-content-text')),
+    );
+    expect(stableTarget.data, 'Open analytics dashboard');
+    expect(stableTarget.maxLines, isNull);
+    expect(stableTarget.softWrap, isTrue);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('auto-width growth suppresses stale non-transition handoffs', (
+    tester,
+  ) async {
+    const buttonKey = Key('auto-width-stale-handoff-button');
+
+    Future<void> show(String label) => tester.pumpWidget(
+          wrapForTest(
+            AwesomeButton(
+              key: buttonKey,
+              child: label,
+            ),
+          ),
+        );
+
+    await show('Open');
+    await pumpAutoWidthMeasurement(tester);
+    await show('Open analytics dashboard');
+    await pumpAutoWidthMeasurement(tester);
+    expect(
+      tester
+          .widget<Text>(
+            find.byKey(const ValueKey<String>('aws-btn-content-text')),
+          )
+          .data,
+      'Open',
+    );
+
+    await tester.pump(const Duration(milliseconds: 48));
+    await show('Save report');
+    await pumpAutoWidthMeasurement(tester);
+    await tester.pumpAndSettle();
+
+    expect(
+      tester
+          .widget<Text>(
+            find.byKey(const ValueKey<String>('aws-btn-content-text')),
+          )
+          .data,
+      'Save report',
+    );
+  });
+
+  testWidgets('rapid non-transition replacements never expose under-width wrap',
+      (
+    tester,
+  ) async {
+    tester.view.devicePixelRatio = 3;
+    addTearDown(tester.view.resetDevicePixelRatio);
+    const buttonKey = Key('rapid-atomic-label-button');
+
+    Widget build(String label) => wrapForTest(
+          AwesomeButton(
+            key: buttonKey,
+            style: const AwesomeButtonStyle(textFontFamily: 'Ahem'),
+            child: label,
+          ),
+        );
+
+    await tester.pumpWidget(build('Open'));
+    await pumpAutoWidthMeasurement(tester);
+
+    for (final target in <String>[
+      'Open analytics dashboard',
+      'Go',
+      'Open reports and account settings',
+      'Save',
+    ]) {
+      await tester.pumpWidget(build(target));
+      for (var frame = 0; frame < 4; frame += 1) {
+        await tester.pump(const Duration(milliseconds: 16));
+        final text = tester.widget<Text>(
+          find.byKey(const ValueKey<String>('aws-btn-content-text')),
+        );
+        final requiredWidth = requiredOuterWidthForVisibleText(
+          tester,
+          horizontalPadding: 16,
+          borderWidth: 0,
+        );
+        final availableWidth = tester.getSize(shellFinderFor(buttonKey)).width;
+        final physicallyFits =
+            (availableWidth * 3).floor() >= (requiredWidth * 3).ceil();
+        if (!physicallyFits) {
+          expect(text.maxLines, 1);
+          expect(text.softWrap, isFalse);
+          expect(text.overflow, TextOverflow.clip);
+        }
+      }
+    }
+
+    await tester.pumpAndSettle();
+    final finalText = tester.widget<Text>(
+      find.byKey(const ValueKey<String>('aws-btn-content-text')),
+    );
+    expect(finalText.data, 'Save');
+    expect(finalText.maxLines, isNull);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('auto-width growth leads text by 30 percent of the text duration',
+      (
     tester,
   ) async {
     const buttonKey = Key('auto-width-transition-grow-button');
@@ -556,20 +795,33 @@ void main() {
       ),
     );
     await pumpAutoWidthMeasurement(tester);
-    await pumpTextTransitionFrames(tester);
+    await tester.pump(const Duration(milliseconds: 80));
 
-    final midText = tester
-        .widget<Text>(
-          find.byKey(const ValueKey<String>('aws-btn-content-text')),
-        )
-        .data!;
+    expect(
+      tester
+          .widget<Text>(
+            find.byKey(const ValueKey<String>('aws-btn-content-text')),
+          )
+          .data,
+      'Open',
+    );
+    expect(
+      tester.getSize(shellFinderFor(buttonKey)).width,
+      greaterThan(shortWidth),
+    );
+
+    final midText = await pumpUntilTransientText(
+      tester,
+      source: 'Open',
+      target: 'Open analytics dashboard',
+    );
     expect(midText, isNot('Open'));
     expect(midText, isNot('Open analytics dashboard'));
     expect(tester.getSize(shellFinderFor(buttonKey)).width,
         greaterThan(shortWidth));
   });
 
-  testWidgets('auto-width with textTransition delays shrink width by 50ms', (
+  testWidgets('auto-width shrink starts width after the 30 percent text lead', (
     tester,
   ) async {
     const buttonKey = Key('auto-width-transition-shrink-button');
@@ -596,20 +848,15 @@ void main() {
       ),
     );
     await pumpAutoWidthMeasurement(tester);
-    await pumpTextTransitionFrames(tester);
+    await tester.pump(const Duration(milliseconds: 96));
 
-    final midText = tester
-        .widget<Text>(
-          find.byKey(const ValueKey<String>('aws-btn-content-text')),
-        )
-        .data!;
-    expect(midText, isNot('Open analytics dashboard'));
-    expect(tester.getSize(shellFinderFor(buttonKey)).width, longWidth);
-
-    await tester.pump(const Duration(milliseconds: 50));
     expect(tester.getSize(shellFinderFor(buttonKey)).width, longWidth);
 
     await tester.pump(const Duration(milliseconds: 16));
+    expect(tester.getSize(shellFinderFor(buttonKey)).width, longWidth);
+
+    await tester.pump(const Duration(milliseconds: 96));
+    await pumpAutoWidthMeasurement(tester);
     expect(
         tester.getSize(shellFinderFor(buttonKey)).width, lessThan(longWidth));
   });
@@ -649,6 +896,530 @@ void main() {
 
     expect(tester.getSize(shellFinderFor(buttonKey)).width,
         greaterThan(shortWidth));
+  });
+
+  testWidgets(
+      'every published auto-width frame fits under large Ahem typography', (
+    tester,
+  ) async {
+    const buttonKey = Key('strict-fit-auto-width-button');
+
+    Widget build(String label) {
+      return MaterialApp(
+        home: MediaQuery(
+          data: const MediaQueryData(
+            textScaler: TextScaler.linear(1.8),
+          ),
+          child: Scaffold(
+            body: Center(
+              child: AwesomeButton(
+                key: buttonKey,
+                paddingHorizontal: 24,
+                textTransition: true,
+                style: const AwesomeButtonStyle(
+                  borderWidth: 3,
+                  textFontFamily: 'Ahem',
+                ),
+                child: label,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    await tester.pumpWidget(build('iiiiii'));
+    await pumpAutoWidthMeasurement(tester);
+    await tester.pumpWidget(build('mmmmmmmmmmmmmmmm'));
+    await pumpAutoWidthMeasurement(tester);
+
+    var transientFrames = 0;
+    for (var frame = 0; frame < 60; frame += 1) {
+      await tester.pump(const Duration(milliseconds: 16));
+      final text = tester.widget<Text>(
+        find.byKey(const ValueKey<String>('aws-btn-content-text')),
+      );
+      if (text.data == 'iiiiii' || text.data == 'mmmmmmmmmmmmmmmm') {
+        continue;
+      }
+      transientFrames += 1;
+      final required = requiredOuterWidthForVisibleText(
+        tester,
+        horizontalPadding: 24,
+        borderWidth: 3,
+      );
+      final available = tester.getSize(shellFinderFor(buttonKey)).width;
+      final paragraph = tester.renderObject<RenderParagraph>(
+        find.byKey(const ValueKey<String>('aws-btn-content-text')),
+      );
+      expect(required, lessThanOrEqualTo(available + 0.5));
+      expect(paragraph.didExceedMaxLines, isFalse);
+      expect(text.maxLines, 1);
+      expect(text.softWrap, isFalse);
+      expect(text.overflow, TextOverflow.clip);
+    }
+
+    expect(transientFrames, greaterThan(0));
+    await tester.pumpAndSettle();
+    expect(
+      tester.getSize(shellFinderFor(buttonKey)).width,
+      greaterThanOrEqualTo(
+        requiredOuterWidthForVisibleText(
+          tester,
+          horizontalPadding: 24,
+          borderWidth: 3,
+        ),
+      ),
+    );
+  });
+
+  testWidgets('every published RTL auto-width frame fits', (tester) async {
+    const buttonKey = Key('strict-fit-rtl-auto-width-button');
+
+    Widget build(String label) {
+      return MaterialApp(
+        home: Directionality(
+          textDirection: TextDirection.rtl,
+          child: Scaffold(
+            body: Center(
+              child: AwesomeButton(
+                key: buttonKey,
+                textTransition: true,
+                child: label,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    await tester.pumpWidget(build('Go'));
+    await pumpAutoWidthMeasurement(tester);
+    await tester.pumpWidget(build('View analytics dashboard'));
+    await pumpAutoWidthMeasurement(tester);
+
+    var checkedFrames = 0;
+    for (var frame = 0; frame < 55; frame += 1) {
+      await tester.pump(const Duration(milliseconds: 16));
+      final text = tester.widget<Text>(
+        find.byKey(const ValueKey<String>('aws-btn-content-text')),
+      );
+      if (text.data == 'Go' || text.data == 'View analytics dashboard') {
+        continue;
+      }
+      checkedFrames += 1;
+      expect(
+        requiredOuterWidthForVisibleText(
+          tester,
+          horizontalPadding: 16,
+          borderWidth: 0,
+        ),
+        lessThanOrEqualTo(
+          tester.getSize(shellFinderFor(buttonKey)).width + 0.5,
+        ),
+      );
+    }
+
+    expect(checkedFrames, greaterThan(0));
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('auto-width fit includes auxiliary slots and excludes extra', (
+    tester,
+  ) async {
+    const buttonKey = Key('auxiliary-fit-button');
+
+    Widget build(String label) {
+      return wrapForTest(
+        AwesomeButton(
+          key: buttonKey,
+          paddingHorizontal: 20,
+          before: const SizedBox(width: 20, height: 12),
+          after: const SizedBox(width: 30, height: 12),
+          extra: const SizedBox(width: 500, height: 12),
+          textTransition: true,
+          style: const AwesomeButtonStyle(
+            borderWidth: 2,
+            contentGap: 6,
+          ),
+          child: label,
+        ),
+      );
+    }
+
+    await tester.pumpWidget(build('Go'));
+    expect(
+      tester.getSize(shellFinderFor(buttonKey)).width,
+      greaterThanOrEqualTo(
+        requiredOuterWidthForVisibleText(
+          tester,
+          horizontalPadding: 20,
+          borderWidth: 2,
+          auxiliaryWidth: 50,
+          gapWidth: 12,
+        ),
+      ),
+    );
+    expect(tester.takeException(), isNull);
+    await tester.pump();
+    await pumpAutoWidthMeasurement(tester);
+    final shortWidth = tester.getSize(shellFinderFor(buttonKey)).width;
+
+    await tester.pumpWidget(build('View analytics dashboard'));
+    await tester.pump();
+    await pumpAutoWidthMeasurement(tester);
+
+    var checkedFrames = 0;
+    for (var frame = 0; frame < 55; frame += 1) {
+      await tester.pump(const Duration(milliseconds: 16));
+      final text = tester.widget<Text>(
+        find.byKey(const ValueKey<String>('aws-btn-content-text')),
+      );
+      if (text.data == 'Go' || text.data == 'View analytics dashboard') {
+        continue;
+      }
+      checkedFrames += 1;
+      final required = requiredOuterWidthForVisibleText(
+        tester,
+        horizontalPadding: 20,
+        borderWidth: 2,
+        auxiliaryWidth: 50,
+        gapWidth: 12,
+      );
+      expect(
+        required,
+        lessThanOrEqualTo(
+          tester.getSize(shellFinderFor(buttonKey)).width + 0.5,
+        ),
+      );
+    }
+
+    expect(checkedFrames, greaterThan(0));
+    await tester.pumpAndSettle();
+    final finalWidth = tester.getSize(shellFinderFor(buttonKey)).width;
+    expect(finalWidth, greaterThan(shortWidth));
+    expect(finalWidth, lessThan(500));
+  });
+
+  testWidgets('active metric changes reject stale widths and preserve fit', (
+    tester,
+  ) async {
+    const buttonKey = Key('retargeted-text-metrics-button');
+
+    Widget build(
+      String label, {
+      required double scale,
+      required double padding,
+    }) {
+      return MaterialApp(
+        home: MediaQuery(
+          data: MediaQueryData(textScaler: TextScaler.linear(scale)),
+          child: Scaffold(
+            body: Center(
+              child: AwesomeButton(
+                key: buttonKey,
+                paddingHorizontal: padding,
+                textTransition: true,
+                style: const AwesomeButtonStyle(
+                  borderWidth: 2,
+                  textFontFamily: 'Ahem',
+                ),
+                child: label,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    await tester.pumpWidget(build('Go', scale: 1, padding: 12));
+    await pumpAutoWidthMeasurement(tester);
+    await tester.pumpWidget(
+      build('View analytics dashboard', scale: 1, padding: 12),
+    );
+    await pumpUntilTransientText(
+      tester,
+      source: 'Go',
+      target: 'View analytics dashboard',
+    );
+
+    await tester.pumpWidget(
+      build('View analytics dashboard', scale: 2, padding: 28),
+    );
+    for (var frame = 0; frame < 55; frame += 1) {
+      await tester.pump(const Duration(milliseconds: 16));
+      final text = tester.widget<Text>(
+        find.byKey(const ValueKey<String>('aws-btn-content-text')),
+      );
+      if (text.data == 'View analytics dashboard') {
+        break;
+      }
+      expect(
+        requiredOuterWidthForVisibleText(
+          tester,
+          horizontalPadding: 28,
+          borderWidth: 2,
+        ),
+        lessThanOrEqualTo(
+          tester.getSize(shellFinderFor(buttonKey)).width + 0.5,
+        ),
+      );
+    }
+
+    await tester.pumpAndSettle();
+    expect(
+      tester
+          .widget<Text>(
+            find.byKey(const ValueKey<String>('aws-btn-content-text')),
+          )
+          .data,
+      'View analytics dashboard',
+    );
+    expect(
+      tester.getSize(shellFinderFor(buttonKey)).width,
+      greaterThanOrEqualTo(
+        requiredOuterWidthForVisibleText(
+          tester,
+          horizontalPadding: 28,
+          borderWidth: 2,
+        ),
+      ),
+    );
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('constrained transient frames clip on one logical line', (
+    tester,
+  ) async {
+    const buttonKey = Key('constrained-transition-button');
+
+    Widget build(String label, TextDirection direction) {
+      return MaterialApp(
+        home: Directionality(
+          textDirection: direction,
+          child: Scaffold(
+            body: Center(
+              child: AwesomeButton(
+                key: buttonKey,
+                width: 120,
+                textTransition: true,
+                child: label,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    for (final direction in TextDirection.values) {
+      await tester.pumpWidget(build('View analytics dashboard', direction));
+      await tester.pumpAndSettle();
+      final faceHeight = tester.getSize(faceFinderFor(buttonKey)).height;
+      await tester.pumpWidget(build('Go', direction));
+      await pumpUntilTransientText(
+        tester,
+        source: 'View analytics dashboard',
+        target: 'Go',
+      );
+
+      final text = tester.widget<Text>(
+        find.byKey(const ValueKey<String>('aws-btn-content-text')),
+      );
+      final row = tester.widget<Flex>(
+        find
+            .ancestor(
+              of: find.byKey(
+                const ValueKey<String>('aws-btn-content-text'),
+              ),
+              matching: find.byWidgetPredicate(
+                (widget) =>
+                    widget is Flex && widget.direction == Axis.horizontal,
+              ),
+            )
+            .first,
+      );
+      expect(text.maxLines, 1);
+      expect(text.softWrap, isFalse);
+      expect(text.overflow, TextOverflow.clip);
+      expect(text.textAlign, TextAlign.start);
+      expect(row.mainAxisAlignment, MainAxisAlignment.start);
+      expect(tester.getSize(faceFinderFor(buttonKey)).height, faceHeight);
+      expect(tester.takeException(), isNull);
+      await tester.pumpAndSettle();
+    }
+  });
+
+  testWidgets('animateSize false settles target geometry before scrambling', (
+    tester,
+  ) async {
+    const buttonKey = Key('instant-geometry-text-transition-button');
+
+    await tester.pumpWidget(
+      wrapForTest(
+        const AwesomeButton(
+          key: buttonKey,
+          animateSize: false,
+          textTransition: true,
+          child: 'Go',
+        ),
+      ),
+    );
+    await pumpAutoWidthMeasurement(tester);
+    final shortWidth = tester.getSize(shellFinderFor(buttonKey)).width;
+
+    await tester.pumpWidget(
+      wrapForTest(
+        const AwesomeButton(
+          key: buttonKey,
+          animateSize: false,
+          textTransition: true,
+          child: 'View analytics dashboard',
+        ),
+      ),
+    );
+    await pumpAutoWidthMeasurement(tester);
+
+    expect(tester.getSize(shellFinderFor(buttonKey)).width,
+        greaterThan(shortWidth));
+    expect(
+      tester
+          .widget<Text>(
+            find.byKey(const ValueKey<String>('aws-btn-content-text')),
+          )
+          .data,
+      isNot('View analytics dashboard'),
+    );
+  });
+
+  testWidgets('equal measured widths run text without a width phase', (
+    tester,
+  ) async {
+    const buttonKey = Key('equal-width-text-transition-button');
+
+    Widget build(String label) {
+      return wrapForTest(
+        AwesomeButton(
+          key: buttonKey,
+          textTransition: true,
+          style: const AwesomeButtonStyle(textFontFamily: 'Ahem'),
+          child: label,
+        ),
+      );
+    }
+
+    await tester.pumpWidget(build('iiii'));
+    await pumpAutoWidthMeasurement(tester);
+    final sourceWidth = tester.getSize(shellFinderFor(buttonKey)).width;
+
+    await tester.pumpWidget(build('llll'));
+    await pumpUntilTransientText(
+      tester,
+      source: 'iiii',
+      target: 'llll',
+    );
+
+    expect(
+      tester.getSize(shellFinderFor(buttonKey)).width,
+      closeTo(sourceWidth, 0.5),
+    );
+    await tester.pumpAndSettle();
+    expect(tester.getSize(shellFinderFor(buttonKey)).width,
+        closeTo(sourceWidth, 0.5));
+  });
+
+  testWidgets('stretch transitions use one-line constrained clipping', (
+    tester,
+  ) async {
+    const buttonKey = Key('stretch-text-transition-button');
+
+    Widget build(String label) {
+      return wrapForTest(
+        SizedBox(
+          width: 140,
+          child: AwesomeButton(
+            key: buttonKey,
+            stretch: true,
+            textTransition: true,
+            child: label,
+          ),
+        ),
+      );
+    }
+
+    await tester.pumpWidget(build('Go'));
+    final faceHeight = tester.getSize(faceFinderFor(buttonKey)).height;
+    await tester.pumpWidget(build('View analytics dashboard'));
+    await pumpUntilTransientText(
+      tester,
+      source: 'Go',
+      target: 'View analytics dashboard',
+    );
+
+    final text = tester.widget<Text>(
+      find.byKey(const ValueKey<String>('aws-btn-content-text')),
+    );
+    expect(text.maxLines, 1);
+    expect(text.softWrap, isFalse);
+    expect(text.overflow, TextOverflow.clip);
+    expect(tester.getSize(shellFinderFor(buttonKey)).width, 140);
+    expect(tester.getSize(faceFinderFor(buttonKey)).height, faceHeight);
+    expect(tester.takeException(), isNull);
+
+    await tester.pumpAndSettle();
+    final stableText = tester.widget<Text>(
+      find.byKey(const ValueKey<String>('aws-btn-content-text')),
+    );
+    expect(stableText.data, 'View analytics dashboard');
+    expect(stableText.maxLines, isNull);
+    expect(stableText.softWrap, isTrue);
+  });
+
+  testWidgets('disabling textTransition settles an active target', (
+    tester,
+  ) async {
+    const buttonKey = Key('disabled-active-text-transition-button');
+
+    Widget build(String label, {required bool transition}) {
+      return wrapForTest(
+        AwesomeButton(
+          key: buttonKey,
+          textTransition: transition,
+          child: label,
+        ),
+      );
+    }
+
+    await tester.pumpWidget(build('Go', transition: true));
+    await pumpAutoWidthMeasurement(tester);
+    await tester.pumpWidget(
+      build('View analytics dashboard', transition: true),
+    );
+    await pumpUntilTransientText(
+      tester,
+      source: 'Go',
+      target: 'View analytics dashboard',
+    );
+
+    await tester.pumpWidget(
+      build('View analytics dashboard', transition: false),
+    );
+    await pumpAutoWidthMeasurement(tester);
+
+    var text = tester.widget<Text>(
+      find.byKey(const ValueKey<String>('aws-btn-content-text')),
+    );
+    expect(text.data, 'Go');
+    expect(text.maxLines, 1);
+    expect(text.softWrap, isFalse);
+
+    await tester.pumpAndSettle();
+    text = tester.widget<Text>(
+      find.byKey(const ValueKey<String>('aws-btn-content-text')),
+    );
+    expect(text.data, 'View analytics dashboard');
+    expect(text.maxLines, isNull);
+    expect(text.softWrap, isTrue);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('default buttons resolve a neutral translucent shadow plane', (
@@ -997,16 +1768,14 @@ void main() {
       ),
     );
 
-    await pumpTextTransitionFrames(tester, count: 3);
-
-    final midText = tester
-        .widget<Text>(
-          find.byKey(const ValueKey<String>('aws-btn-content-text')),
-        )
-        .data!;
+    final midText = await pumpUntilTransientText(
+      tester,
+      source: 'Go#3',
+      target: 'Mission#42',
+    );
     expect(midText, isNot('Go#3'));
     expect(midText, isNot('Mission#42'));
-    expect(midText, hasLength(7));
+    expect(midText.length, inInclusiveRange(4, 10));
 
     await tester.pumpAndSettle();
 
@@ -1055,7 +1824,7 @@ void main() {
   });
 
   testWidgets(
-      'string labels stay single-line clipped during text transition frames', (
+      'transient labels stay single-line and stable labels regain wrapping', (
     tester,
   ) async {
     const buttonKey = Key('single-line-transition-button');
@@ -1070,6 +1839,7 @@ void main() {
         ),
       ),
     );
+    final initialFaceHeight = tester.getSize(faceFinderFor(buttonKey)).height;
 
     await tester.pumpWidget(
       wrapForTest(
@@ -1082,15 +1852,29 @@ void main() {
       ),
     );
 
-    await pumpTextTransitionFrames(tester, count: 3);
+    await pumpUntilTransientText(
+      tester,
+      source: 'Open',
+      target: 'Open analytics dashboard',
+    );
 
-    final text = tester.widget<Text>(
+    final transientText = tester.widget<Text>(
       find.byKey(const ValueKey<String>('aws-btn-content-text')),
     );
 
-    expect(text.maxLines, 1);
-    expect(text.softWrap, false);
-    expect(text.overflow, TextOverflow.clip);
+    expect(transientText.maxLines, 1);
+    expect(transientText.softWrap, isFalse);
+    expect(transientText.overflow, TextOverflow.clip);
+    expect(tester.getSize(faceFinderFor(buttonKey)).height, initialFaceHeight);
+
+    await tester.pumpAndSettle();
+    final stableText = tester.widget<Text>(
+      find.byKey(const ValueKey<String>('aws-btn-content-text')),
+    );
+    expect(stableText.data, 'Open analytics dashboard');
+    expect(stableText.maxLines, isNull);
+    expect(stableText.softWrap, isTrue);
+    expect(stableText.overflow, isNull);
   });
 
   testWidgets(
@@ -1207,6 +1991,149 @@ void main() {
 
     expect(find.byKey(const ValueKey<String>('aws-btn-content-text')),
         findsNothing);
+  });
+
+  testWidgets('rapid replacement retargets from the displayed frame', (
+    tester,
+  ) async {
+    const buttonKey = Key('interrupted-text-transition-button');
+    final semantics = tester.ensureSemantics();
+
+    Widget build(String label) {
+      return wrapForTest(
+        AwesomeButton(
+          key: buttonKey,
+          textTransition: true,
+          child: label,
+        ),
+      );
+    }
+
+    await tester.pumpWidget(build('Start'));
+    await pumpAutoWidthMeasurement(tester);
+    await tester.pumpWidget(build('View analytics dashboard'));
+    await pumpUntilTransientText(
+      tester,
+      source: 'Start',
+      target: 'View analytics dashboard',
+    );
+
+    await tester.pumpWidget(build('Done'));
+    final sourceForLatestTransition = tester
+        .widget<Text>(
+          find.byKey(const ValueKey<String>('aws-btn-content-text')),
+        )
+        .data!;
+    expect(sourceForLatestTransition, isNot('View analytics dashboard'));
+    expect(sourceForLatestTransition, isNot('Done'));
+    expect(tester.getSemantics(find.byKey(buttonKey)).label, 'Done');
+
+    await tester.pumpAndSettle();
+    expect(
+      tester
+          .widget<Text>(
+            find.byKey(const ValueKey<String>('aws-btn-content-text')),
+          )
+          .data,
+      'Done',
+    );
+    expect(tester.takeException(), isNull);
+    semantics.dispose();
+  });
+
+  testWidgets('Reduced Motion settles an active transition immediately', (
+    tester,
+  ) async {
+    const buttonKey = Key('reduced-motion-text-transition-button');
+
+    Widget build(String label, {required bool reduceMotion}) {
+      return MaterialApp(
+        home: MediaQuery(
+          data: MediaQueryData(disableAnimations: reduceMotion),
+          child: Scaffold(
+            body: Center(
+              child: AwesomeButton(
+                key: buttonKey,
+                textTransition: true,
+                child: label,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    await tester.pumpWidget(build('Go', reduceMotion: false));
+    await pumpAutoWidthMeasurement(tester);
+    await tester.pumpWidget(
+      build('View analytics dashboard', reduceMotion: false),
+    );
+    await pumpUntilTransientText(
+      tester,
+      source: 'Go',
+      target: 'View analytics dashboard',
+    );
+
+    await tester.pumpWidget(
+      build('View analytics dashboard', reduceMotion: true),
+    );
+    await tester.pump();
+    final text = tester.widget<Text>(
+      find.byKey(const ValueKey<String>('aws-btn-content-text')),
+    );
+    expect(text.data, 'View analytics dashboard');
+    expect(text.maxLines, isNull);
+    expect(text.softWrap, isTrue);
+    expect(tester.getSemantics(find.byKey(buttonKey)).label,
+        'View analytics dashboard');
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('Reduced Motion suppresses transition frames from the outset', (
+    tester,
+  ) async {
+    const buttonKey = Key('initial-reduced-motion-text-transition-button');
+
+    Widget build(String label) {
+      return MaterialApp(
+        home: MediaQuery(
+          data: const MediaQueryData(disableAnimations: true),
+          child: Scaffold(
+            body: Center(
+              child: AwesomeButton(
+                key: buttonKey,
+                textTransition: true,
+                child: label,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    await tester.pumpWidget(build('Go'));
+    await pumpAutoWidthMeasurement(tester);
+    await tester.pumpWidget(build('View analytics dashboard'));
+    await pumpAutoWidthMeasurement(tester);
+
+    final text = tester.widget<Text>(
+      find.byKey(const ValueKey<String>('aws-btn-content-text')),
+    );
+    expect(text.data, 'View analytics dashboard');
+    expect(text.maxLines, isNull);
+    expect(
+      tester.getSize(shellFinderFor(buttonKey)).width,
+      greaterThanOrEqualTo(
+        requiredOuterWidthForVisibleText(
+          tester,
+          horizontalPadding: 16,
+          borderWidth: 0,
+        ),
+      ),
+    );
+    expect(tester.getSemantics(find.byKey(buttonKey)).label,
+        'View analytics dashboard');
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('applies custom style values', (tester) async {
@@ -1791,7 +2718,6 @@ void main() {
         hasEnabledState: true,
         isEnabled: true,
         isFocusable: true,
-        hasFocusAction: true,
         hasTapAction: true,
       ),
     );

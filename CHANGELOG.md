@@ -1,5 +1,22 @@
 # Changelog
 
+## Unreleased
+
+- Hardened callback freshness, terminal cancellation, progress completion, accessibility, Reduced Motion, large-text, RTL, validation, and theme resolution without selecting a release version.
+- Added package-owned regressions and deterministic API, documentation, coverage, package-shape, and CI gates.
+- Preserved explicitly requested flat visual styling while disabled; disabled state still blocks activation.
+- Adopted the cross-platform text-transition contract with grapheme-aware
+  scrambling, measured frame publication, coordinated width timing, one-line
+  constrained fallback, stable target semantics, and Reduced Motion settlement.
+- Prevented non-scrambled auto-width growth from publishing a longer label
+  before the face can fit it; shrink still swaps before contracting.
+- Hardened final label settlement with conservative physical-pixel fit and a
+  generation-matched post-layout proof before stable wrapping resumes.
+- Recorded the one-time `0.9.1` semantic comparison in
+  `tool/api/0.9.1-to-current.md`: it reports no breaking declarations and
+  classifies the new motion, accessibility, and canonical `x` fields as
+  additive changes, with `twitter` retained as a deprecated alias.
+
 ## 0.9.1
 
 - Added API documentation across the public widget, theme, style, and helper

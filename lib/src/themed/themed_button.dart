@@ -2,10 +2,18 @@ import 'package:flutter/material.dart';
 
 import '../awesome_button.dart';
 import '../awesome_button_style.dart';
+import '../style_frame_scope.dart';
 import 'colors.dart' as themed_colors;
 import 'models.dart';
 import 'resolution.dart';
 import 'themes.dart';
+
+double? _normalizedThemedDimension(double? value) {
+  if (value == null || !value.isFinite) {
+    return null;
+  }
+  return value < 0 ? 0 : value;
+}
 
 /// A typed wrapper around [AwesomeButton] that resolves built-in themes,
 /// variants, and sizes.
@@ -51,6 +59,10 @@ class ThemedButton extends StatefulWidget {
     this.onPressedOut,
     this.onProgressStart,
     this.onProgressEnd,
+    this.pressInAnimationDuration,
+    this.accessibilityLabel,
+    this.accessibilityHint,
+    this.accessibilityLongPressLabel,
   });
 
   /// Main child content shown in the button face.
@@ -65,13 +77,15 @@ class ThemedButton extends StatefulWidget {
   /// Built-in theme name lookup.
   final ThemeName? name;
 
-  /// Visual variant to resolve from the active theme.
+  /// Visual variant to resolve from the active theme. An explicit flat variant
+  /// remains visually flat while disabled.
   final ButtonVariant type;
 
   /// Size preset to resolve from the active theme.
   final ButtonSize size;
 
-  /// Whether the themed flat variant should override [type].
+  /// Whether the themed flat variant should override [type], including while
+  /// disabled.
   final bool flat;
 
   /// Whether shell, shadow, and border colors should resolve transparent.
@@ -89,7 +103,8 @@ class ThemedButton extends StatefulWidget {
   /// Long-press callback fired after the platform long-press gesture wins.
   final VoidCallback? onLongPress;
 
-  /// Whether the button should ignore interactions and render disabled styles.
+  /// Whether the button should ignore interactions and render the disabled
+  /// variant unless flat styling was requested.
   final bool disabled;
 
   /// Fixed button width override.
@@ -167,6 +182,18 @@ class ThemedButton extends StatefulWidget {
   /// Callback fired after progress mode fully completes.
   final VoidCallback? onProgressEnd;
 
+  /// Optional press-down timing override.
+  final Duration? pressInAnimationDuration;
+
+  /// Explicit accessible name.
+  final String? accessibilityLabel;
+
+  /// Optional assistive-technology hint.
+  final String? accessibilityHint;
+
+  /// Optional assistive long-action label.
+  final String? accessibilityLongPressLabel;
+
   @override
 
   /// Creates the mutable state for this themed button.
@@ -187,6 +214,8 @@ class _ThemedButtonState extends State<ThemedButton>
   late ThemeButtonStyle _displayedPalette;
   ThemeButtonStyle? _transitionFromPalette;
   ThemeButtonStyle? _transitionToPalette;
+  bool _reduceMotion = false;
+  bool _skipInnerStyleAnimationOnce = false;
 
   @override
   void initState() {
@@ -196,7 +225,9 @@ class _ThemedButtonState extends State<ThemedButton>
     _transitionController = AnimationController(
       vsync: this,
       duration: _typeTransitionDuration,
-    )..addListener(_handleTransitionTick);
+    )
+      ..addListener(_handleTransitionTick)
+      ..addStatusListener(_handleTransitionStatus);
   }
 
   @override
@@ -207,13 +238,20 @@ class _ThemedButtonState extends State<ThemedButton>
     final nextData = _resolveThemedData(widget);
     final sameThemeSource =
         _hasSameThemeSource(oldWidget, previousData, nextData);
-    final shouldAnimate = sameThemeSource &&
+    final shouldAnimate = !_reduceMotion &&
+        sameThemeSource &&
         oldWidget.transparent == widget.transparent &&
         previousData.buttonType != nextData.buttonType;
 
     _resolvedData = nextData;
 
     if (!shouldAnimate) {
+      if (!areThemeButtonStylesEqual(
+        _displayedPalette,
+        nextData.targetPalette,
+      )) {
+        _skipInnerStyleAnimationForNextBuild();
+      }
       _stopTransition();
       _displayedPalette = nextData.targetPalette;
       return;
@@ -231,6 +269,28 @@ class _ThemedButtonState extends State<ThemedButton>
       ..stop()
       ..value = 0
       ..forward();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final nextReduceMotion = MediaQuery.maybeOf(context)?.disableAnimations ??
+        WidgetsBinding.instance.platformDispatcher.accessibilityFeatures
+            .disableAnimations;
+    if (_reduceMotion == nextReduceMotion) {
+      return;
+    }
+    _reduceMotion = nextReduceMotion;
+    if (_reduceMotion) {
+      if (!areThemeButtonStylesEqual(
+        _displayedPalette,
+        _resolvedData.targetPalette,
+      )) {
+        _skipInnerStyleAnimationForNextBuild();
+      }
+      _stopTransition();
+      _displayedPalette = _resolvedData.targetPalette;
+    }
   }
 
   @override
@@ -264,6 +324,27 @@ class _ThemedButtonState extends State<ThemedButton>
     });
   }
 
+  void _handleTransitionStatus(AnimationStatus status) {
+    if (status != AnimationStatus.completed) {
+      return;
+    }
+
+    final targetPalette = _transitionToPalette;
+    if (targetPalette == null) {
+      return;
+    }
+
+    // The controller is no longer animating by the time the completed status
+    // rebuild runs. Retain wrapper ownership for that final exact frame so the
+    // inner button cannot start a second transition from the preceding tick.
+    _skipInnerStyleAnimationForNextBuild();
+    setState(() {
+      _displayedPalette = targetPalette;
+      _transitionFromPalette = null;
+      _transitionToPalette = null;
+    });
+  }
+
   bool _hasSameThemeSource(
     ThemedButton oldWidget,
     _ResolvedThemedButtonData previousData,
@@ -282,18 +363,29 @@ class _ThemedButtonState extends State<ThemedButton>
     _transitionToPalette = null;
   }
 
+  void _skipInnerStyleAnimationForNextBuild() {
+    _skipInnerStyleAnimationOnce = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _skipInnerStyleAnimationOnce = false;
+    });
+  }
+
   double? _resolveAutoWidth({
     required ThemeSizeStyle resolvedSizeStyle,
+    required ThemeButtonStyle resolvedButtonStyle,
   }) {
     if (widget.stretch) {
-      return widget.width;
+      return _normalizedThemedDimension(widget.width);
     }
 
-    if (widget.autoWidth && widget.width == null) {
+    final explicitWidth = _normalizedThemedDimension(widget.width);
+    if (widget.autoWidth && explicitWidth == null) {
       return null;
     }
 
-    return widget.width ?? resolvedSizeStyle.width;
+    return explicitWidth ??
+        _normalizedThemedDimension(resolvedButtonStyle.width) ??
+        _normalizedThemedDimension(resolvedSizeStyle.width);
   }
 
   _ResolvedThemedButtonData _resolveThemedData(ThemedButton widget) {
@@ -305,11 +397,11 @@ class _ThemedButtonState extends State<ThemedButton>
       widget.flat,
       widget.type,
     );
-    final buttonStyle =
-        theme.buttons[buttonType] ?? theme.buttons[ButtonVariant.primary];
-    final resolvedButtonStyle = widget.transparent
-        ? buttonStyle!.merge(transparentStyles)
-        : buttonStyle!;
+    final buttonStyle = theme.buttons[buttonType] ??
+        theme.buttons[ButtonVariant.primary] ??
+        const ThemeButtonStyle();
+    final resolvedButtonStyle =
+        widget.transparent ? buttonStyle.merge(transparentStyles) : buttonStyle;
     final sizeStyle = theme.size[widget.size] ??
         theme.size[ButtonSize.medium] ??
         _fallbackMediumSize;
@@ -337,50 +429,69 @@ class _ThemedButtonState extends State<ThemedButton>
         themeButtonStyleToAwesomeButtonStyle(_displayedPalette);
     final sizeStyle =
         AwesomeButtonStyle(textSize: _resolvedData.sizeStyle.textSize);
-    final effectiveStyle = resolvedBaseStyle
+    final effectiveStyle = sizeStyle
+        .merge(resolvedBaseStyle)
         .merge(paletteStyle)
-        .merge(sizeStyle)
         .merge(widget.style);
 
     final resolvedSizeStyle = _resolvedData.sizeStyle;
     final resolvedButtonStyle = _resolvedData.resolvedButtonStyle;
     final resolvedWidth = _resolveAutoWidth(
       resolvedSizeStyle: resolvedSizeStyle,
+      resolvedButtonStyle: resolvedButtonStyle,
     );
 
-    return AwesomeButton(
-      onPress: widget.onPress,
-      onLongPress: widget.onLongPress,
-      disabled: widget.disabled,
-      width: resolvedWidth,
-      height: widget.height ?? resolvedSizeStyle.height,
-      paddingHorizontal: widget.paddingHorizontal ??
-          resolvedSizeStyle.paddingHorizontal ??
-          resolvedButtonStyle.paddingHorizontal,
-      paddingTop: widget.paddingTop ?? resolvedButtonStyle.paddingTop,
-      paddingBottom: widget.paddingBottom ?? resolvedButtonStyle.paddingBottom,
-      before: widget.before,
-      after: widget.after,
-      extra: widget.extra,
-      stretch: widget.stretch,
-      style: effectiveStyle,
-      focusNode: widget.focusNode,
-      autofocus: widget.autofocus,
-      activeOpacity: widget.activeOpacity,
-      debouncedPressTime: widget.debouncedPressTime,
-      progress: widget.progress,
-      showProgressBar: widget.showProgressBar,
-      progressLoadingTime: widget.progressLoadingTime,
-      animateSize: widget.animateSize,
-      textTransition: widget.textTransition,
-      animatedPlaceholder: widget.animatedPlaceholder,
-      onPressIn: widget.onPressIn,
-      onPressOut: widget.onPressOut,
-      onPressedIn: widget.onPressedIn,
-      onPressedOut: widget.onPressedOut,
-      onProgressStart: widget.onProgressStart,
-      onProgressEnd: widget.onProgressEnd,
-      child: widget.child,
+    return AwesomeButtonStyleFrameScope(
+      framesArePreInterpolated:
+          _skipInnerStyleAnimationOnce || _transitionController.isAnimating,
+      child: AwesomeButton(
+        onPress: widget.onPress,
+        onLongPress: widget.onLongPress,
+        disabled: widget.disabled,
+        width: resolvedWidth,
+        height: _normalizedThemedDimension(widget.height) ??
+            _normalizedThemedDimension(resolvedButtonStyle.height) ??
+            _normalizedThemedDimension(resolvedSizeStyle.height) ??
+            52,
+        paddingHorizontal:
+            _normalizedThemedDimension(widget.paddingHorizontal) ??
+                _normalizedThemedDimension(
+                  resolvedButtonStyle.paddingHorizontal,
+                ) ??
+                _normalizedThemedDimension(
+                  resolvedSizeStyle.paddingHorizontal,
+                ),
+        paddingTop: _normalizedThemedDimension(widget.paddingTop) ??
+            _normalizedThemedDimension(resolvedButtonStyle.paddingTop),
+        paddingBottom: _normalizedThemedDimension(widget.paddingBottom) ??
+            _normalizedThemedDimension(resolvedButtonStyle.paddingBottom),
+        before: widget.before,
+        after: widget.after,
+        extra: widget.extra,
+        stretch: widget.stretch,
+        style: effectiveStyle,
+        focusNode: widget.focusNode,
+        autofocus: widget.autofocus,
+        activeOpacity: widget.activeOpacity,
+        debouncedPressTime: widget.debouncedPressTime,
+        progress: widget.progress,
+        showProgressBar: widget.showProgressBar,
+        progressLoadingTime: widget.progressLoadingTime,
+        animateSize: widget.animateSize,
+        textTransition: widget.textTransition,
+        animatedPlaceholder: widget.animatedPlaceholder,
+        onPressIn: widget.onPressIn,
+        onPressOut: widget.onPressOut,
+        onPressedIn: widget.onPressedIn,
+        onPressedOut: widget.onPressedOut,
+        onProgressStart: widget.onProgressStart,
+        onProgressEnd: widget.onProgressEnd,
+        pressInAnimationDuration: widget.pressInAnimationDuration,
+        accessibilityLabel: widget.accessibilityLabel,
+        accessibilityHint: widget.accessibilityHint,
+        accessibilityLongPressLabel: widget.accessibilityLongPressLabel,
+        child: widget.child,
+      ),
     );
   }
 }
