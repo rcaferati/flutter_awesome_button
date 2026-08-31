@@ -40,6 +40,8 @@ The library exports:
 
 Explore the shared Awesome Button visual system in the [Figma design file](https://www.figma.com/file/Ug8sNPzmevU3ZQus9Klu5aHq/react-awesome-button-theme-blue). The Figma file is a visual design reference; this package's documentation defines its behavior, accessibility, and public API contract.
 
+[<img alt="Awesome Button components in the shared Figma design file" src="https://raw.githubusercontent.com/rcaferati/flutter_awesome_button/main/screenshots/figma.png" width="800" />](https://www.figma.com/file/Ug8sNPzmevU3ZQus9Klu5aHq/react-awesome-button-theme-blue)
+
 ## Installation
 
 ```yaml
