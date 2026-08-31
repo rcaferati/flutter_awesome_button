@@ -2,7 +2,9 @@
 
 ## Unreleased
 
-- Hardened callback freshness, terminal cancellation, progress completion, accessibility, Reduced Motion, large-text, RTL, validation, and theme resolution without selecting a release version.
+## 0.10.0 - 2026-08-31
+
+- Hardened callback freshness, terminal cancellation, progress completion, accessibility, Reduced Motion, large-text, RTL, validation, and theme resolution.
 - Added package-owned regressions and deterministic API, documentation, coverage, package-shape, and CI gates.
 - Preserved explicitly requested flat visual styling while disabled; disabled state still blocks activation.
 - Adopted the cross-platform text-transition contract with grapheme-aware
@@ -12,8 +14,8 @@
   before the face can fit it; shrink still swaps before contracting.
 - Hardened final label settlement with conservative physical-pixel fit and a
   generation-matched post-layout proof before stable wrapping resumes.
-- Recorded the one-time `0.9.1` semantic comparison in
-  `tool/api/0.9.1-to-current.md`: it reports no breaking declarations and
+- Recorded the one-time `0.9.1` to `0.10.0` semantic comparison in
+  `tool/api/0.9.1-to-0.10.0.md`: it reports no breaking declarations and
   classifies the new motion, accessibility, and canonical `x` fields as
   additive changes, with `twitter` retained as a deprecated alias.
 
