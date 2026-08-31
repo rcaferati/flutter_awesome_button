@@ -6,6 +6,7 @@ architecture/
 build/
 coverage/
 DEVELOPMENT_ARCHITECTURE.md
+RELEASE_NOTES_0.10.0.md
 doc/
 temp/
 test/

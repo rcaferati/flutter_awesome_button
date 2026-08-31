@@ -2,7 +2,7 @@
   "version": 3,
   "packageApi": {
     "packageName": "rcaferati_flutter_awesome_button",
-    "packageVersion": "0.9.1",
+    "packageVersion": "0.10.0",
     "packagePath": "<package-root>",
     "interfaceDeclarations": [
       {

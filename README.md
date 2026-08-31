@@ -44,7 +44,7 @@ Explore the shared Awesome Button visual system in the [Figma design file](https
 
 ```yaml
 dependencies:
-  rcaferati_flutter_awesome_button: ^0.9.1
+  rcaferati_flutter_awesome_button: ^0.10.0
 ```
 
 Then install dependencies:
