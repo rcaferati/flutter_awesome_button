@@ -3,8 +3,10 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/physics.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:rcaferati_flutter_awesome_button/rcaferati_flutter_awesome_button.dart';
-import 'package:flutter_vector_icons/flutter_vector_icons.dart';
+
+part 'demo_icons.dart';
 
 double _performHeavyLoad(int durationMs) {
   final stopwatch = Stopwatch()..start();
@@ -20,6 +22,22 @@ double _performHeavyLoad(int durationMs) {
   return accumulator;
 }
 
+Color _demoButtonForeground(
+  RegisteredThemeDefinition theme,
+  ButtonVariant variant,
+) {
+  return theme.buttons[variant]?.textColor ?? theme.color;
+}
+
+Widget _navigationDemoIcon(BuildContext context, _DemoIconName name) {
+  return _DemoIcon(
+    name: name,
+    size: 21,
+    color: IconTheme.of(context).color ??
+        Theme.of(context).colorScheme.onSurfaceVariant,
+  );
+}
+
 /// Example app used to demonstrate the package gallery and behaviors.
 class AwesomeButtonExampleApp extends StatelessWidget {
   /// Creates the example application widget.
@@ -29,6 +47,7 @@ class AwesomeButtonExampleApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'rcaferati_flutter_awesome_button',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
         scaffoldBackgroundColor: Colors.white,
@@ -104,31 +123,53 @@ class _DemoShellState extends State<_DemoShell> {
           const _SizingScreen(),
         ],
       ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _selectedTabIndex,
-        onDestinationSelected: (index) {
-          setState(() {
-            _selectedTabIndex = index;
-          });
-        },
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(FontAwesome.paint_brush),
-            label: 'Themed',
+      bottomNavigationBar: NavigationBarTheme(
+        data: const NavigationBarThemeData(
+          labelTextStyle: WidgetStatePropertyAll(
+            TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w500,
+            ),
           ),
-          NavigationDestination(
-            icon: Icon(Entypo.progress_two),
-            label: 'Progress',
-          ),
-          NavigationDestination(
-            icon: Icon(Ionicons.share_social_sharp),
-            label: 'Social',
-          ),
-          NavigationDestination(
-            icon: Icon(Ionicons.resize),
-            label: 'Size Changes',
-          ),
-        ],
+        ),
+        child: NavigationBar(
+          selectedIndex: _selectedTabIndex,
+          onDestinationSelected: (index) {
+            setState(() {
+              _selectedTabIndex = index;
+            });
+          },
+          destinations: [
+            NavigationDestination(
+              icon: Builder(
+                builder: (context) =>
+                    _navigationDemoIcon(context, _DemoIconName.paintbrush),
+              ),
+              label: 'Themed',
+            ),
+            NavigationDestination(
+              icon: Builder(
+                builder: (context) =>
+                    _navigationDemoIcon(context, _DemoIconName.gauge),
+              ),
+              label: 'Progress',
+            ),
+            NavigationDestination(
+              icon: Builder(
+                builder: (context) =>
+                    _navigationDemoIcon(context, _DemoIconName.shareNodes),
+              ),
+              label: 'Social',
+            ),
+            NavigationDestination(
+              icon: Builder(
+                builder: (context) =>
+                    _navigationDemoIcon(context, _DemoIconName.sizeChanges),
+              ),
+              label: 'Size Changes',
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -526,9 +567,10 @@ class _ThemedButtonsScreenState extends State<_ThemedButtonsScreen> {
                             name: theme.name,
                             type: ButtonVariant.flat,
                             size: ButtonSize.icon,
+                            accessibilityLabel: 'Cycle variant',
                             onPress: _handleVariantTransitionPress,
-                            child: Icon(
-                              AntDesign.swap,
+                            child: _DemoIcon(
+                              name: _DemoIconName.rightLeft,
                               size: 18,
                               color: primaryColor ?? theme.color,
                             ),
@@ -557,9 +599,10 @@ class _ThemedButtonsScreenState extends State<_ThemedButtonsScreen> {
                             config: theme,
                             type: ButtonVariant.flat,
                             size: ButtonSize.icon,
+                            accessibilityLabel: 'Cycle text',
                             onPress: _handleTextTransitionPress,
-                            child: Icon(
-                              AntDesign.stepforward,
+                            child: _DemoIcon(
+                              name: _DemoIconName.forwardStep,
                               size: 18,
                               color: primaryColor ?? theme.color,
                             ),
@@ -589,9 +632,10 @@ class _ThemedButtonsScreenState extends State<_ThemedButtonsScreen> {
                             config: theme,
                             type: ButtonVariant.flat,
                             size: ButtonSize.icon,
+                            accessibilityLabel: 'Cycle size',
                             onPress: _handleSizeTransitionPress,
-                            child: Icon(
-                              AntDesign.stepforward,
+                            child: _DemoIcon(
+                              name: _DemoIconName.forwardStep,
                               size: 18,
                               color: primaryColor ?? theme.color,
                             ),
@@ -680,9 +724,14 @@ class _ThemedButtonsScreenState extends State<_ThemedButtonsScreen> {
                       ThemedButton(
                         config: theme,
                         type: ButtonVariant.primary,
-                        before: const Padding(
-                          padding: EdgeInsets.only(right: 5),
-                          child: Icon(AntDesign.menufold, size: 21),
+                        style: const AwesomeButtonStyle(contentGap: 8),
+                        before: _DemoIcon(
+                          name: _DemoIconName.bars,
+                          size: 24,
+                          color: _demoButtonForeground(
+                            theme,
+                            ButtonVariant.primary,
+                          ),
                         ),
                         child: 'Button Icon',
                       ),
@@ -691,9 +740,14 @@ class _ThemedButtonsScreenState extends State<_ThemedButtonsScreen> {
                       ThemedButton(
                         config: theme,
                         type: ButtonVariant.anchor,
-                        after: const Padding(
-                          padding: EdgeInsets.only(left: 5),
-                          child: Icon(AntDesign.appstore_o, size: 21),
+                        style: const AwesomeButtonStyle(contentGap: 8),
+                        after: _DemoIcon(
+                          name: _DemoIconName.tableCellsLarge,
+                          size: 24,
+                          color: _demoButtonForeground(
+                            theme,
+                            ButtonVariant.anchor,
+                          ),
                         ),
                         child: 'Button Icon',
                       ),
@@ -704,9 +758,14 @@ class _ThemedButtonsScreenState extends State<_ThemedButtonsScreen> {
                         progress: true,
                         onPress: _handleTimeout,
                         type: ButtonVariant.danger,
-                        before: const Padding(
-                          padding: EdgeInsets.only(right: 5),
-                          child: Icon(AntDesign.delete, size: 21),
+                        style: const AwesomeButtonStyle(contentGap: 8),
+                        before: _DemoIcon(
+                          name: _DemoIconName.trashCan,
+                          size: 24,
+                          color: _demoButtonForeground(
+                            theme,
+                            ButtonVariant.danger,
+                          ),
                         ),
                         child: 'Button Icon',
                       ),
@@ -716,7 +775,15 @@ class _ThemedButtonsScreenState extends State<_ThemedButtonsScreen> {
                         config: theme,
                         type: ButtonVariant.primary,
                         size: ButtonSize.icon,
-                        child: const Icon(AntDesign.plussquareo, size: 21),
+                        accessibilityLabel: 'Add',
+                        child: _DemoIcon(
+                          name: _DemoIconName.squarePlus,
+                          size: 24,
+                          color: _demoButtonForeground(
+                            theme,
+                            ButtonVariant.primary,
+                          ),
+                        ),
                       ),
                     ),
                     _sectionButton(
@@ -724,7 +791,15 @@ class _ThemedButtonsScreenState extends State<_ThemedButtonsScreen> {
                         config: theme,
                         type: ButtonVariant.anchor,
                         size: ButtonSize.icon,
-                        child: const Icon(AntDesign.adduser, size: 21),
+                        accessibilityLabel: 'Add user',
+                        child: _DemoIcon(
+                          name: _DemoIconName.userPlus,
+                          size: 24,
+                          color: _demoButtonForeground(
+                            theme,
+                            ButtonVariant.anchor,
+                          ),
+                        ),
                       ),
                     ),
                     _sectionButton(
@@ -734,7 +809,15 @@ class _ThemedButtonsScreenState extends State<_ThemedButtonsScreen> {
                         onPress: _handleTimeout,
                         type: ButtonVariant.danger,
                         size: ButtonSize.icon,
-                        child: const Icon(AntDesign.delete, size: 21),
+                        accessibilityLabel: 'Delete',
+                        child: _DemoIcon(
+                          name: _DemoIconName.trashCan,
+                          size: 24,
+                          color: _demoButtonForeground(
+                            theme,
+                            ButtonVariant.danger,
+                          ),
+                        ),
                       ),
                     ),
                   ],
@@ -819,6 +902,9 @@ class _ProgressScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const themeName = ThemeName.bojack;
+    final theme = getTheme(name: themeName);
+    final primaryForeground =
+        _demoButtonForeground(theme, ButtonVariant.primary);
 
     return _DemoContainer(
       child: Column(
@@ -884,7 +970,12 @@ class _ProgressScreen extends StatelessWidget {
                     raiseAmount: 6,
                     borderRadius: BorderRadius.all(Radius.circular(60)),
                   ),
-                  child: const Icon(MaterialCommunityIcons.send, size: 24),
+                  accessibilityLabel: 'Send',
+                  child: _DemoIcon(
+                    name: _DemoIconName.locationArrow,
+                    size: 24,
+                    color: primaryForeground,
+                  ),
                 ),
               ),
               _sectionButton(
@@ -898,7 +989,12 @@ class _ProgressScreen extends StatelessWidget {
                     raiseAmount: 0,
                     borderRadius: BorderRadius.all(Radius.circular(60)),
                   ),
-                  child: const Icon(MaterialCommunityIcons.facebook, size: 24),
+                  accessibilityLabel: 'Facebook',
+                  child: _DemoIcon(
+                    name: _DemoIconName.facebook,
+                    size: 24,
+                    color: primaryForeground,
+                  ),
                 ),
               ),
             ],
@@ -923,6 +1019,7 @@ class _SocialScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const themeName = ThemeName.bojack;
+    final theme = getTheme(name: themeName);
 
     return _DemoContainer(
       child: Column(
@@ -941,10 +1038,16 @@ class _SocialScreen extends StatelessWidget {
                   style: const AwesomeButtonStyle(
                     borderRadius: BorderRadius.all(Radius.circular(50)),
                     raiseAmount: 8,
+                    contentGap: 8,
                   ),
-                  before: const Padding(
-                    padding: EdgeInsets.only(right: 8),
-                    child: Icon(FontAwesome.facebook_square, size: 24),
+                  accessibilityLabel: 'Facebook',
+                  before: _DemoIcon(
+                    name: _DemoIconName.facebook,
+                    size: 24,
+                    color: _demoButtonForeground(
+                      theme,
+                      ButtonVariant.facebook,
+                    ),
                   ),
                   child: 'Facebook',
                 ),
@@ -959,10 +1062,13 @@ class _SocialScreen extends StatelessWidget {
                   style: const AwesomeButtonStyle(
                     borderRadius: BorderRadius.all(Radius.circular(8)),
                     raiseAmount: 8,
+                    contentGap: 8,
                   ),
-                  before: const Padding(
-                    padding: EdgeInsets.only(right: 5),
-                    child: Icon(AntDesign.twitter, size: 24),
+                  accessibilityLabel: 'X',
+                  before: _DemoIcon(
+                    name: _DemoIconName.x,
+                    size: 24,
+                    color: _demoButtonForeground(theme, ButtonVariant.x),
                   ),
                   child: 'X',
                 ),
@@ -977,12 +1083,15 @@ class _SocialScreen extends StatelessWidget {
                   style: const AwesomeButtonStyle(
                     borderRadius: BorderRadius.zero,
                     raiseAmount: 6,
+                    contentGap: 8,
                   ),
-                  before: const Padding(
-                    padding: EdgeInsets.only(right: 4),
-                    child: Icon(
-                      MaterialCommunityIcons.facebook_messenger,
-                      size: 25,
+                  accessibilityLabel: 'Messenger',
+                  before: _DemoIcon(
+                    name: _DemoIconName.messenger,
+                    size: 24,
+                    color: _demoButtonForeground(
+                      theme,
+                      ButtonVariant.messenger,
                     ),
                   ),
                   child: 'Messenger',
@@ -999,6 +1108,7 @@ class _SocialScreen extends StatelessWidget {
                     backgroundActive: Color.fromRGBO(0, 0, 0, 0.15),
                     shadowColor: Color.fromRGBO(0, 0, 0, 0.15),
                     backgroundProgress: Color.fromRGBO(0, 0, 0, 0.15),
+                    contentGap: 8,
                   ),
                   extra: const SizedBox.expand(
                     child: DecoratedBox(
@@ -1016,9 +1126,14 @@ class _SocialScreen extends StatelessWidget {
                       ),
                     ),
                   ),
-                  before: const Padding(
-                    padding: EdgeInsets.only(right: 7),
-                    child: Icon(FontAwesome.instagram, size: 24),
+                  accessibilityLabel: 'Instagram',
+                  before: _DemoIcon(
+                    name: _DemoIconName.instagram,
+                    size: 24,
+                    color: _demoButtonForeground(
+                      theme,
+                      ButtonVariant.primary,
+                    ),
                   ),
                   child: 'Instagram',
                 ),
@@ -1039,7 +1154,15 @@ class _SocialScreen extends StatelessWidget {
                     borderRadius: BorderRadius.zero,
                     raiseAmount: 0,
                   ),
-                  child: const Icon(FontAwesome.whatsapp, size: 24),
+                  accessibilityLabel: 'WhatsApp',
+                  child: _DemoIcon(
+                    name: _DemoIconName.whatsapp,
+                    size: 24,
+                    color: _demoButtonForeground(
+                      theme,
+                      ButtonVariant.whatsapp,
+                    ),
+                  ),
                 ),
               ),
               _sectionButton(
@@ -1053,7 +1176,15 @@ class _SocialScreen extends StatelessWidget {
                     borderRadius: BorderRadius.zero,
                     raiseAmount: 8,
                   ),
-                  child: const Icon(FontAwesome.youtube, size: 24),
+                  accessibilityLabel: 'YouTube',
+                  child: _DemoIcon(
+                    name: _DemoIconName.youtube,
+                    size: 24,
+                    color: _demoButtonForeground(
+                      theme,
+                      ButtonVariant.youtube,
+                    ),
+                  ),
                 ),
               ),
               _sectionButton(
@@ -1067,7 +1198,15 @@ class _SocialScreen extends StatelessWidget {
                     borderRadius: BorderRadius.all(Radius.circular(8)),
                     raiseAmount: 8,
                   ),
-                  child: const Icon(FontAwesome.linkedin, size: 24),
+                  accessibilityLabel: 'LinkedIn',
+                  child: _DemoIcon(
+                    name: _DemoIconName.linkedin,
+                    size: 24,
+                    color: _demoButtonForeground(
+                      theme,
+                      ButtonVariant.linkedin,
+                    ),
+                  ),
                 ),
               ),
               _sectionButton(
@@ -1082,7 +1221,15 @@ class _SocialScreen extends StatelessWidget {
                     borderRadius: BorderRadius.all(Radius.circular(80)),
                     raiseAmount: 8,
                   ),
-                  child: const Icon(FontAwesome.pinterest, size: 24),
+                  accessibilityLabel: 'Pinterest',
+                  child: _DemoIcon(
+                    name: _DemoIconName.pinterest,
+                    size: 24,
+                    color: _demoButtonForeground(
+                      theme,
+                      ButtonVariant.pinterest,
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -1159,32 +1306,45 @@ class _SizingScreenState extends State<_SizingScreen> {
                   style: _captionStyle,
                 ),
               ),
+              _sectionButton(
+                ThemedButton(
+                  name: ThemeName.bruce,
+                  type: ButtonVariant.secondary,
+                  size: ButtonSize.small,
+                  autoWidth: true,
+                  style: const AwesomeButtonStyle(raiseAmount: 0),
+                  activeOpacity: 0.6,
+                  onPress: _toggleAutoWidthLabel,
+                  child: 'Toggle Label Length',
+                ),
+              ),
               const _SizingVariantLabel('Animated with text transition'),
               _sectionButton(
-                AwesomeButton(
+                ThemedButton(
+                  name: ThemeName.bruce,
+                  type: ButtonVariant.anchor,
+                  autoWidth: true,
                   textTransition: true,
                   child: _autoWidthLabel,
                 ),
               ),
               const _SizingVariantLabel('Animated without text transition'),
               _sectionButton(
-                AwesomeButton(
+                ThemedButton(
+                  name: ThemeName.bruce,
+                  type: ButtonVariant.anchor,
+                  autoWidth: true,
                   child: _autoWidthLabel,
                 ),
               ),
               const _SizingVariantLabel('Instant opt-out'),
               _sectionButton(
-                AwesomeButton(
+                ThemedButton(
+                  name: ThemeName.bruce,
+                  type: ButtonVariant.anchor,
+                  autoWidth: true,
                   animateSize: false,
                   child: _autoWidthLabel,
-                ),
-              ),
-              _sectionButton(
-                ThemedButton(
-                  name: ThemeName.basic,
-                  type: ButtonVariant.secondary,
-                  onPress: _toggleAutoWidthLabel,
-                  child: 'Toggle Label Length',
                 ),
               ),
             ],
@@ -1201,17 +1361,31 @@ class _SizingScreenState extends State<_SizingScreen> {
               ),
               _sectionButton(
                 ThemedButton(
-                  name: ThemeName.basic,
+                  name: ThemeName.bruce,
                   type: ButtonVariant.secondary,
+                  size: ButtonSize.small,
+                  autoWidth: true,
+                  style: const AwesomeButtonStyle(raiseAmount: 0),
+                  activeOpacity: 0.6,
                   onPress: _cycleThemeSize,
                   child: 'Cycle Theme Size',
                 ),
               ),
-              const _SizingVariantLabel('Animated'),
+              const _SizingVariantLabel('Animated with text transition'),
               _sectionButton(
                 ThemedButton(
-                  name: ThemeName.rick,
-                  type: ButtonVariant.primary,
+                  name: ThemeName.bruce,
+                  type: ButtonVariant.danger,
+                  size: _currentThemeSize,
+                  textTransition: true,
+                  child: _currentThemeSizeLabel,
+                ),
+              ),
+              const _SizingVariantLabel('Animated without text transition'),
+              _sectionButton(
+                ThemedButton(
+                  name: ThemeName.bruce,
+                  type: ButtonVariant.danger,
                   size: _currentThemeSize,
                   child: _currentThemeSizeLabel,
                 ),
@@ -1220,8 +1394,8 @@ class _SizingScreenState extends State<_SizingScreen> {
               _sectionButton(
                 ThemedButton(
                   animateSize: false,
-                  name: ThemeName.rick,
-                  type: ButtonVariant.primary,
+                  name: ThemeName.bruce,
+                  type: ButtonVariant.danger,
                   size: _currentThemeSize,
                   child: _currentThemeSizeLabel,
                 ),
